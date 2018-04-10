@@ -1,5 +1,4 @@
 import numpy as np
-import utils_fun as UF
 
 from sklearn.neighbors import KNeighborsClassifier
         
