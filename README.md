@@ -1,5 +1,5 @@
 # This is base codes for the other repositories.
-In this repository, we can 
+In this repository, I store some base codes for the other repositories.
 
 ## Two step classifier
 In general, there are at least two cpu in modern computers, so I would use concurrent.futures module 
