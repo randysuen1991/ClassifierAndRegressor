@@ -2,11 +2,10 @@ import sys
 if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path :
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
 import UtilFun as UF
-
-
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-        
+from concurrent.futures import ProcessPoolExecutor 
+import DimensionReductionApproaches as DRA
 
     
 class Classifier():
@@ -43,35 +42,48 @@ class LinearDiscriminantClassifier(Classifier):
         return len(correct_results) / len(Y_test), correct_results
         
 class TwoStepClassifier(Classifier):
+    
     def __init__(self,first_step_function,second_step_function,**kwargs):
         super().__init__()
-        
         self.first_step_function = first_step_function
-        self.second_step_classifier = LinearDiscriminantClassifier(discriminant_function=second_step_function)
+        self.second_step_function = second_step_function
         self.parameters = dict()
         
     
     def Fit(self,X_train,Y_train,**kwargs):
-        p_tilde = kwargs.get('p_tilde')
-        q_tilde = kwargs.get('q_tilde')
+
         self.input_shape = (X_train.shape[1],X_train.shape[2],X_train.shape[3])
-        self._Search_Dimensionality(X_train=X_train,Y_train=Y_train)
+        dimension = self._Search_Dimensionality(X_train=X_train,Y_train=Y_train)
+        linear_subspace = self.first_step_function(X_train=X_train,Y_train=Y_train,p_tilde=dimension,q_tilde=dimension)
+        self.parameters['first_step']['column'] = linear_subspace[0]
+        self.parameters['first_step']['row'] = linear_subspace[1]
+        
         X_train_proj = np.matmul(X_train,self.parameters['first_step']['row'])
         X_train_proj = np.matmul(self.parameters['first_step']['column'],X_train_proj)
         X_train_proj_vec = UF.imgs2vectors(X_train_proj)
+        
+        self.parameters['second_step'] = self.second_step_function(X_train=X_train,Y_train=Y_train)
         self.transformed_X_train = np.matmul(X_train_proj_vec,self.parameters['second_step'])
+        
         return self.parameters
     
     def _Search_Dimensionality(self,X_train,Y_train,p_tilde,q_tilde,dimension=50):
         
+        
+        ratios = []
         for iter in range(dimension):
-            linear_subspace = self.first_step_function(X_train = X_train,input_shape = self.input_shape,p_tilde=p_tilde,q_tilde=q_tilde)
+            linear_subspace = self.first_step_function(X_train = X_train,input_shape = self.input_shape,p_tilde=iter+1,q_tilde=iter+1)
             X_train_proj = np.matmul(np.matmul(linear_subspace[0],X_train),linear_subspace[1])
-            
-            
-            
-        self.parameters['first_step'] = 
-        self.parameters['second_step'] = 
+            X_train_proj_vec = UF.imgs2vectors(X_train_proj)
+            linear_subspace = self.second_step_function(X_train_proj,Y_train)
+            X_train_proj_vec_proj = np.matmul(X_train_proj_vec,linear_subspace)
+            ratio = self.Compute_Ratio(X_train_proj_vec_proj,Y_train)
+            ratios.append(ratio)
+        
+        ratios = np.round(ratios,6)
+        index = np.argmax(ratios)
+        
+        return index + 1
     
     
     def Classify(self,X_train,Y_train,X_test,Y_test,**kwargs):
@@ -84,4 +96,12 @@ class TwoStepClassifier(Classifier):
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
 
-            
+    def Compute_Ratio(self,X_train,Y_train):
+        Total_centered = DRA.TotalCentered(X_train)
+        Betweeen_centered = DRA.BetweenGroupMeanCentered(X_train,Y_train)
+        _, S, _ = np.linalg.svd(Total_centered,full_matrices=False)
+        denominator = np.sum(S)
+        _, S, _ = np.linalg.svd(Between_centered,full_matrices=False)
+        numerator = np.sum(S)
+        return numerator/denominator
+    
