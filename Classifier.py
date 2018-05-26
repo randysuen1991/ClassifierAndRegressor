@@ -4,21 +4,30 @@ if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not i
 import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from concurrent.futures import ProcessPoolExecutor 
+from sklearn.svm import SVC
+
 import DimensionReductionApproaches as DRA
 
     
 class Classifier():
-    def __init__(self):
+    def __init__(self,classify_function,**kwargs):
         self.parameters = None
         self.transformed_X_train = None
         self.Y_train = None
         self.kwargs = dict()
-    def Fit(cls):
-        raise NotImplementedError
-    def Classify(cls):
-        raise NotImplementedError
-            
+        self.classify_function = classify_function
+    def Fit(self,X_train,Y_train):
+        if self.claasify_function == KNeighborsClassifier :
+            self.classifier = self.classify_function(self.kwargs.get('k',5))
+        elif self.classify_function == SVC :
+            self.classifier = self.classify_function()
+        self.classifier.fit(X_train,Y_train)
+        
+    def Classify(self,X_train,Y_train,X_test,Y_test):
+        results = self.classifier.predict(X_test)
+        correct_results = np.where(results == Y_test.ravel())[0]
+        return len(correct_results) / len(Y_test), correct_results
+    
 class LinearDiscriminantClassifier(Classifier):
     
     def __init__(self,discriminant_function,classify_function,**kwargs):
@@ -29,16 +38,15 @@ class LinearDiscriminantClassifier(Classifier):
         
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
+        X_train_proj = np.matmul(X_train,self.parameters)
+        self.neighbor = KNeighborsClassifier(n_neighbors=self.kwargs.get('k',1))
+        self.neighbor.fit(X_train_proj,Y_train.ravel())
         return self.parameters
     
     def Classify(self,X_train,Y_train,X_test,Y_test):
-        k = self.kwargs.get('k',1)
-        X_train_proj = np.matmul(X_train,self.parameters)
         X_test_proj = np.matmul(X_test,self.parameters)
         # Use K-nearest neighbor to classify the testing data
-        neighbor = KNeighborsClassifier(n_neighbors=k)
-        neighbor.fit(X_train_proj,Y_train.ravel())
-        results = neighbor.predict(X_test_proj)
+        results = self.neighbor.predict(X_test_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
         
