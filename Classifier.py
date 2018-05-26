@@ -21,9 +21,10 @@ class Classifier():
             
 class LinearDiscriminantClassifier(Classifier):
     
-    def __init__(self,discriminant_function,**kwargs):
+    def __init__(self,discriminant_function,classify_function,**kwargs):
         super().__init__()
         self.discriminant_function = discriminant_function
+        self.classify_function = classify_function
         self.kwargs = kwargs
         
     def Fit(self,X_train,Y_train):
