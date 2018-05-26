@@ -2,6 +2,6 @@
 In this repository, I store some base codes for the other repositories.
 
 ## Two step classifier
-In general, there are at least two cpu in modern computers, so I would use concurrent.futures module 
-(https://docs.python.org/3/library/concurrent.futures.html) to accelerate the speed of the training process of it.
+It reduce the dimension of the data in two steps, so that the precision of the classification would be 
+higher.<\br>
 For detail, please refer to my master thesis.
