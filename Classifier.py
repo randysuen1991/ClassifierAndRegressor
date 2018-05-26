@@ -8,7 +8,17 @@ from sklearn.svm import SVC
 
 import DimensionReductionApproaches as DRA
 
+
+# This decorator would identify the classifier. This should decorate the Fit function of the 
+# Classifier. 
+def ClassifierDecorator():
+    def decofun():
+        
+        return None
     
+    return decofun
+    
+
 class Classifier():
     def __init__(self,classify_function,**kwargs):
         self.parameters = None
@@ -16,6 +26,8 @@ class Classifier():
         self.Y_train = None
         self.kwargs = dict()
         self.classify_function = classify_function
+        
+    
     def Fit(self,X_train,Y_train):
         if self.claasify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',5))
@@ -23,7 +35,7 @@ class Classifier():
             self.classifier = self.classify_function()
         self.classifier.fit(X_train,Y_train)
         
-    def Classify(self,X_train,Y_train,X_test,Y_test):
+    def Classify(self,X_test,Y_test):
         results = self.classifier.predict(X_test)
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
@@ -35,27 +47,32 @@ class LinearDiscriminantClassifier(Classifier):
         self.discriminant_function = discriminant_function
         self.classify_function = classify_function
         self.kwargs = kwargs
-        
+    
+    
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
         X_train_proj = np.matmul(X_train,self.parameters)
-        self.neighbor = KNeighborsClassifier(n_neighbors=self.kwargs.get('k',1))
-        self.neighbor.fit(X_train_proj,Y_train.ravel())
+        if self.claasify_function == KNeighborsClassifier :
+            self.classifier = self.classify_function(self.kwargs.get('k',5))
+        elif self.classify_function == SVC :
+            self.classifier = self.classify_function()
+        self.classifier.fit(X_train_proj,Y_train.ravel())
         return self.parameters
     
-    def Classify(self,X_train,Y_train,X_test,Y_test):
+    def Classify(self,X_test,Y_test):
         X_test_proj = np.matmul(X_test,self.parameters)
         # Use K-nearest neighbor to classify the testing data
-        results = self.neighbor.predict(X_test_proj)
+        results = self.classifier.predict(X_test_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
         
 class TwoStepClassifier(Classifier):
     
-    def __init__(self,first_step_function,second_step_function,**kwargs):
+    def __init__(self,first_step_function,second_step_function,classify_function,**kwargs):
         super().__init__()
         self.first_step_function = first_step_function
         self.second_step_function = second_step_function
+        self.classify_function = classify_function
         self.parameters = dict()
         
     
