@@ -2,6 +2,10 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.linear_model import Lasso, Ridge, LinearRegression
 
+# import statsmodels.api as sm
+
+
+
 class Regressor():
     def __init__(self):
         self.parameters = None
@@ -10,7 +14,7 @@ class Regressor():
     def Fit(self,X_train,Y_train):
         self.regressor.fit(X_train,Y_train)
         # this function would return the parameters of the regressor and the R^2.
-        return self.regressor.get_params(), self.regressor.score 
+        return self.regressor.intercept_[0], self.regressor.coef_, self.regressor.score
     def Predict(self,X_test):
         prediction = self.regressor.predict(X_test)
         return prediction
