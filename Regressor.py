@@ -1,8 +1,9 @@
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
 from sklearn.linear_model import Lasso, Ridge, LinearRegression
-
-# import statsmodels.api as sm
+from scipy import stats
+import statsmodels.api as sm
+import numpy as np
 
 
 
@@ -12,9 +13,17 @@ class Regressor():
         self.regressor = None
         
     def Fit(self,X_train,Y_train):
-        self.regressor.fit(X_train,Y_train)
-        # this function would return the parameters of the regressor and the R^2.
-        return self.regressor.intercept_[0], self.regressor.coef_, self.regressor.score
+        self.regressor.fit(X_train,Y_train,1)
+        self.sse = np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0) / float(X_train.shape[0] - X_train.shape[1])
+        self.se = np.array([
+            np.sqrt(np.diagonal(self.sse[i] * np.linalg.inv(np.dot(X_train.T, X_train))))
+                                                    for i in range(self.sse.shape[0])
+                    ])
+        self.t = self.regressor.coef_ / self.se
+        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), Y_train.shape[0] - X_train.shape[1]))
+        
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score
+    
     def Predict(self,X_test):
         prediction = self.regressor.predict(X_test)
         return prediction
