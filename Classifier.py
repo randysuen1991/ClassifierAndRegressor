@@ -26,12 +26,13 @@ def ClassifierDecorator():
 
 # I also should have written a decorator for 'self.Classsify'. Since sometimes we don't have the labels of testing data.
 
-
+# This is a failure decorator. I want to use it to decorate a class function, but it will miss 'self' argument.
 class ClassifyDeco():
     def __init__(self,f):
         self.f = f
     def __call__(self,**kwargs):
-        results = self.f.Classify(kwargs.get('X_test'))
+        print(self.f)
+        results = self.f(X_test = kwargs.get('X_test'))
         Y_test = kwargs.get('Y_test',None)
         correct_results = np.where(results == Y_test.ravel())[0]
         if type(Y_test) == np.array :
@@ -93,13 +94,13 @@ class LinearDiscriminantClassifier(Classifier):
         
         return self.parameters
     
-    def Classify(self,X_test,Y_test = None):
+
+    def Classify(self,X_test):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
-        correct_results = np.where(results == Y_test.ravel())[0]
+#        correct_results = np.where(results == Y_test.ravel())[0]
         
-        return results
-    
+#        return results
     
         if type(Y_test) != np.array :
             return results
