@@ -13,11 +13,16 @@ class Regressor():
         self.regressor = None
         
     def Fit(self,X_train,Y_train):
-        self.regressor.fit(X_train,Y_train,1)
-        self.sse = np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0) / float(X_train.shape[0] - X_train.shape[1])
+        self.regressor.fit(X_train,Y_train)
+        self.sse = (np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0) / float(X_train.shape[0] - X_train.shape[1]))
+        
+        
+        if type(self.sse) == np.float64 :
+            self.sse = [self.sse]
+        
         self.se = np.array([
             np.sqrt(np.diagonal(self.sse[i] * np.linalg.inv(np.dot(X_train.T, X_train))))
-                                                    for i in range(self.sse.shape[0])
+                                                    for i in range(len(self.sse))
                     ])
         self.t = self.regressor.coef_ / self.se
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), Y_train.shape[0] - X_train.shape[1]))
