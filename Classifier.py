@@ -30,10 +30,11 @@ class Classifier():
     
     def Fit(self,X_train,Y_train):
         if self.claasify_function == KNeighborsClassifier :
-            self.classifier = self.classify_function(self.kwargs.get('k',5))
+            self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
             self.classifier = self.classify_function()
-        self.classifier.fit(X_train,Y_train)
+        
+        self.classifier.fit(X_train,Y_train.ravel())
         
     def Classify(self,X_test,Y_test):
         results = self.classifier.predict(X_test)
@@ -53,7 +54,7 @@ class LinearDiscriminantClassifier(Classifier):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
         X_train_proj = np.matmul(X_train,self.parameters)
         if self.claasify_function == KNeighborsClassifier :
-            self.classifier = self.classify_function(self.kwargs.get('k',5))
+            self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
             self.classifier = self.classify_function()
         self.classifier.fit(X_train_proj,Y_train.ravel())
@@ -61,7 +62,6 @@ class LinearDiscriminantClassifier(Classifier):
     
     def Classify(self,X_test,Y_test):
         X_test_proj = np.matmul(X_test,self.parameters)
-        # Use K-nearest neighbor to classify the testing data
         results = self.classifier.predict(X_test_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
