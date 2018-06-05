@@ -29,6 +29,13 @@ def ClassifierDecorator():
 
 
 
+
+
+"""
+Notice :
+The labels of the data, i.e the Y should always be numeric number larger or equal to 1
+"""
+
 class Classifier():
     def __init__(self,classify_fun=None,**kwargs):
         self.parameters = None
@@ -51,7 +58,7 @@ class Classifier():
     def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
         correct_results = np.where(results == Y_test.ravel())[0]
-        if Y_test == None :
+        if type(Y_test) == np.array :
             return results
         else :
             return len(correct_results) / len(Y_test), correct_results
@@ -68,18 +75,19 @@ class LinearDiscriminantClassifier(Classifier):
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
         X_train_proj = np.matmul(X_train,self.parameters)
-        if self.claasify_function == KNeighborsClassifier :
+        if self.classify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
             self.classifier = self.classify_function()
         self.classifier.fit(X_train_proj,Y_train.ravel())
+        
         return self.parameters
     
     def Classify(self,X_test,Y_test = None):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
-        if Y_test == None :
+        if type(Y_test) == np.array :
             return results
         else :
             return len(correct_results) / len(Y_test), correct_results
