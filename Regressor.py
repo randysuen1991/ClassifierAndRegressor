@@ -27,7 +27,7 @@ class Regressor():
         self.t = self.regressor.coef_ / self.se
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), Y_train.shape[0] - X_train.shape[1]))
         
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train,Y_train)
     
     def Predict(self,X_test):
         prediction = self.regressor.predict(X_test)
