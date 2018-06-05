@@ -68,7 +68,7 @@ class Classifier():
     def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
         correct_results = np.where(results == Y_test.ravel())[0]
-        if type(Y_test) == np.array :
+        if type(Y_test) != np.array :
             return results
         else :
             return len(correct_results) / len(Y_test), correct_results
@@ -101,7 +101,7 @@ class LinearDiscriminantClassifier(Classifier):
         return results
     
     
-        if type(Y_test) == np.array :
+        if type(Y_test) != np.array :
             return results
         else :
             return len(correct_results) / len(Y_test), correct_results
