@@ -19,16 +19,28 @@ def ClassifierDecorator():
     return decofun
     
 
+
+# I should have written a linear discriminant decoarator to decorate the method of LinearDiscriminantClassifier.
+# i.e it oculd project the input argument into the discriminitive subspace.
+
+
+# I also should have written a decorator for 'self.Classsify'. Since sometimes we don't have the labels of testing data.
+
+
+
+
 class Classifier():
-    def __init__(self,classify_function,**kwargs):
+    def __init__(self,classify_fun=None,**kwargs):
         self.parameters = None
         self.transformed_X_train = None
         self.Y_train = None
         self.kwargs = dict()
-        self.classify_function = classify_function
+        self.classify_function = classify_fun
         
     
     def Fit(self,X_train,Y_train):
+        if self.classify_function == None :
+            raise NotImplementedError('Please pass a classify function before fitting the classifier.')
         if self.claasify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
@@ -36,17 +48,20 @@ class Classifier():
         
         self.classifier.fit(X_train,Y_train.ravel())
         
-    def Classify(self,X_test,Y_test):
+    def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
         correct_results = np.where(results == Y_test.ravel())[0]
-        return len(correct_results) / len(Y_test), correct_results
+        if Y_test == None :
+            return results
+        else :
+            return len(correct_results) / len(Y_test), correct_results
     
 class LinearDiscriminantClassifier(Classifier):
     
-    def __init__(self,discriminant_function,classify_function,**kwargs):
+    def __init__(self,discriminant_fun,classify_fun,**kwargs):
         super().__init__()
-        self.discriminant_function = discriminant_function
-        self.classify_function = classify_function
+        self.discriminant_function = discriminant_fun
+        self.classify_function = classify_fun
         self.kwargs = kwargs
     
     
@@ -60,11 +75,14 @@ class LinearDiscriminantClassifier(Classifier):
         self.classifier.fit(X_train_proj,Y_train.ravel())
         return self.parameters
     
-    def Classify(self,X_test,Y_test):
+    def Classify(self,X_test,Y_test = None):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
-        return len(correct_results) / len(Y_test), correct_results
+        if Y_test == None :
+            return results
+        else :
+            return len(correct_results) / len(Y_test), correct_results
         
 class TwoStepClassifier(Classifier):
     
