@@ -64,28 +64,28 @@ class Classifier():
         self.transformed_X_train = None
         self.Y_train = None
         self.kwargs = dict()
-        self.classify_function = classify_fun
+        self.classify_fun = classify_fun
         
     
     def Fit(self,X_train,Y_train):
-        if self.classify_function == None :
+        if self.classify_fun == None :
             raise NotImplementedError('Please pass a classify function before fitting the classifier.')
-        if self.claasify_function == KNeighborsClassifier :
-            self.classifier = self.classify_function(self.kwargs.get('k',1))
-        elif self.classify_function == SVC :
-            self.classifier = self.classify_function()
+        if self.classify_fun == KNeighborsClassifier :
+            self.classifier = self.classify_fun(self.kwargs.get('k',1))
+        elif self.classify_fun == SVC :
+            self.classifier = self.classify_fun()
         
         self.classifier.fit(X_train,Y_train.ravel())
         
     def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
         correct_results = np.where(results == Y_test.ravel())[0]
-        if type(Y_test) != np.array :
-            return results
-        else :
-            return len(correct_results) / len(Y_test), correct_results
+#        if type(Y_test) != np.array :
+#            return results
+#        else :
+#            return len(correct_results) / len(Y_test), correct_results
 
-
+        return len(correct_results) / len(Y_test), results, correct_results
 
 class LinearDiscriminantClassifier(Classifier):
     
@@ -115,10 +115,10 @@ class LinearDiscriminantClassifier(Classifier):
         
 #        return results
     
-        if type(Y_test) != np.array :
-            return results
-        else :
-            return len(correct_results) / len(Y_test), correct_results
+#        if type(Y_test) != np.array :
+#            return results
+#        else :
+        return len(correct_results) / len(Y_test), results, correct_results
         
 class TwoStepClassifier(Classifier):
     

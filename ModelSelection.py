@@ -6,7 +6,6 @@ if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not i
 from DimensionReductionApproaches import CenteringDecorator
 import warnings
 
-
 class ModelSelection():
     # Till now, Y_train should be a N*1 matrix.
     @CenteringDecorator
