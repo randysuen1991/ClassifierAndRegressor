@@ -14,7 +14,8 @@ class ModelSelection():
         if Y_train.shape[1] > 1 :
             warnings.warn('The dimension of the Y variable should be 1 now.')
         covariance = np.matmul(X_train.T,Y_train)
-        
+        sorted_index = np.argsort(covariance)
+        return sorted_index[::-1]
         
     def StepSelection():
         pass
