@@ -7,6 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
+"""
+Notice: I should add SIR(sliced inverse regression), PIRE(partial inverse regression), Random forest, decision tree, ...regressions to this file.
+
+"""
+
+
 class Regressor():
     def __init__(self):
         self.parameters = None
@@ -62,6 +69,11 @@ class PartialLeastSqaureRegressor(Regressor):
     def __init__(self,n_components):
         super().__init__()
         self.regressor = PLSRegression(n_components=n_components)    
+    def Fit(self,X_train,Y_train):
+        self.regressor.fit(X_train,Y_train)
+        self._inference(X_train,Y_train)
+        
+        return None, self.regressor.coef_, self.p, self.regressor.score(X_train,Y_train)
     
 class LassoRegressor(Regressor):
     def __init__(self,alpha):
