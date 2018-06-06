@@ -81,7 +81,7 @@ class PrincipalComponentRegressor(Regressor):
         prediction = self.regressor.Predict(X_test_transform)
         return prediction
     
-class RidgeRregressor(Regressor):
+class RidgeRegressor(Regressor):
     def __init__(self,alpha):
         super().__init__()
         self.regressor = Ridge(alpha)
