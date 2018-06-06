@@ -4,7 +4,7 @@ from sklearn.linear_model import Lasso, Ridge, LinearRegression
 from scipy import stats
 import statsmodels.api as sm
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 
 class Regressor():
@@ -12,7 +12,7 @@ class Regressor():
         self.parameters = None
         self.regressor = None
     
-    def inference(self,X_train,Y_train):
+    def _inference(self,X_train,Y_train):
         self.sse = np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0) / float(X_train.shape[0] - X_train.shape[1])
         
         
@@ -32,14 +32,21 @@ class Regressor():
     
     def Fit(self,X_train,Y_train):
         self.regressor.fit(X_train,Y_train)
-        self.inference(X_train,Y_train)
+        self._inference(X_train,Y_train)
         
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train,Y_train)
     
     def Predict(self,X_test):
         prediction = self.regressor.predict(X_test)
         return prediction
-        
+    
+    def RegressionPlot(self,X,Y):
+        scatter = plt.scatter(X,Y)
+        line = plt.plot(X,self.regressor.predict(X))
+        plt.ylabel('response')
+        plt.xlabel('explanatory')
+        plt.legend(handles=[scatter,line[0],],labels=['Scatter Plot','Intercept:{} and Slope:{}'.format(self.regressor.intercept_,self.regressor.coef_)],loc='best')
+        plt.title('Scatter Plot and Regression')
 
 class OrdianryLeastSquareRegressor(Regressor):
     def __init__(self):

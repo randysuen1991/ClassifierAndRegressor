@@ -55,6 +55,9 @@ The labels of the data, i.e the Y should always be numeric number larger or equa
 Notice : 
 I should add some new classifier like random forest classifier, decision tree, bayes, nueral network classifier, adaboost classifier...
 """
+
+
+
 class Classifier():
     def __init__(self,classify_fun=None,**kwargs):
         self.parameters = None
