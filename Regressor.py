@@ -42,10 +42,10 @@ class Regressor():
     
     def RegressionPlot(self,X,Y):
         scatter = plt.scatter(X,Y)
-        line = plt.plot(X,self.regressor.predict(X))
+        line = plt.plot(X,self.Predict(X))
         plt.ylabel('response')
         plt.xlabel('explanatory')
-        plt.legend(handles=[scatter,line[0],],labels=['Scatter Plot','Intercept:{} and Slope:{}'.format(self.regressor.intercept_,self.regressor.coef_)],loc='best')
+        plt.legend(handles=[scatter,line[0],],labels=['Scatter Plot','Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,self.regressor.coef_,self.regressor.score(X,Y))],loc='best')
         plt.title('Scatter Plot and Regression')
 
 class OrdianryLeastSquareRegressor(Regressor):
@@ -63,7 +63,7 @@ class LassoRegressor(Regressor):
         super().__init__()
         self.regressor = Lasso(alpha)
     
-    
+# Still need to check this class.
 class PrincipalComponentRegressor(Regressor):
     def __init__(self,n_components):
         super().__init__()
@@ -72,7 +72,10 @@ class PrincipalComponentRegressor(Regressor):
     def Fit(self,X_train,Y_train):
         self.pca = PCA(self.n_components)
         X_train_transform = self.pca.fit_transform(X_train)
-        self.regressor.Fit(X_train_transform,Y_train)
+        intercept_, coef_, self.p, self.rsq = self.regressor.Fit(X_train_transform,Y_train)
+        
+        return intercept_, coef_, self.p, self.rsq
+        
     def Predict(self,X_test):
         X_test_transform = self.pca.transform(X_test)
         prediction = self.regressor.Predict(X_test_transform)
