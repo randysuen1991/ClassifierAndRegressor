@@ -11,9 +11,8 @@ class Regressor():
     def __init__(self):
         self.parameters = None
         self.regressor = None
-        
-    def Fit(self,X_train,Y_train):
-        self.regressor.fit(X_train,Y_train)
+    
+    def inference(self,X_train,Y_train):
         self.sse = np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0) / float(X_train.shape[0] - X_train.shape[1])
         
         
@@ -28,8 +27,12 @@ class Regressor():
         
         #self.se = beta_i_hat / sqrt(std_sqr multiplied inv((X.T)X)_ii ) 
         self.t = self.regressor.coef_ / self.se
-        
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), X_train.shape[0] - X_train.shape[1]))
+    
+    
+    def Fit(self,X_train,Y_train):
+        self.regressor.fit(X_train,Y_train)
+        self.inference(X_train,Y_train)
         
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train,Y_train)
     
@@ -44,14 +47,9 @@ class OrdianryLeastSquareRegressor(Regressor):
         self.regressor = LinearRegression()
       
 class PartialLeastSqaureRegressor(Regressor):
-    def __init__(self):
+    def __init__(self,n_components):
         super().__init__()
-        self.regressor = PLSRegression()
-    def Fit(self,X_train,Y_train,n_components):
-        self.regressor.__dict__['n_components'] = n_components
-        self.regressor.fit(X_train,Y_train)
-        return self.regressor.get_params(), self.regressor.score
-    
+        self.regressor = PLSRegression(n_components=n_components)    
     
 class LassoRegressor(Regressor):
     def __init__(self,alpha):
@@ -60,11 +58,12 @@ class LassoRegressor(Regressor):
     
     
 class PrincipalComponentRegressor(Regressor):
-    def __init__(self):
+    def __init__(self,n_components):
         super().__init__()
+        self.n_components = n_components
         self.regressor = OrdianryLeastSquareRegressor()
-    def Fit(self,X_train,Y_train,n_components):
-        self.pca = PCA(n_components)
+    def Fit(self,X_train,Y_train):
+        self.pca = PCA(self.n_components)
         X_train_transform = self.pca.fit_transform(X_train)
         self.regressor.Fit(X_train_transform,Y_train)
     def Predict(self,X_test):

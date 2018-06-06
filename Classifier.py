@@ -27,6 +27,11 @@ def ClassifierDecorator():
 # I also should have written a decorator for 'self.Classsify'. Since sometimes we don't have the labels of testing data.
 
 # This is a failure decorator. I want to use it to decorate a class function, but it will miss 'self' argument.
+    
+
+
+
+
 class ClassifyDeco():
     def __init__(self,f):
         self.f = f
@@ -46,7 +51,10 @@ class ClassifyDeco():
 Notice :
 The labels of the data, i.e the Y should always be numeric number larger or equal to 1
 """
-
+"""
+Notice : 
+I should add some new classifier like random forest classifier, decision tree, bayes, nueral network classifier, adaboost classifier...
+"""
 class Classifier():
     def __init__(self,classify_fun=None,**kwargs):
         self.parameters = None
@@ -73,7 +81,9 @@ class Classifier():
             return results
         else :
             return len(correct_results) / len(Y_test), correct_results
-    
+
+
+
 class LinearDiscriminantClassifier(Classifier):
     
     def __init__(self,discriminant_fun,classify_fun,**kwargs):
@@ -95,10 +105,10 @@ class LinearDiscriminantClassifier(Classifier):
         return self.parameters
     
 
-    def Classify(self,X_test):
+    def Classify(self,X_test,Y_test=None):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
-#        correct_results = np.where(results == Y_test.ravel())[0]
+        correct_results = np.where(results == Y_test.ravel())[0]
         
 #        return results
     
