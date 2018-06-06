@@ -79,13 +79,13 @@ class Classifier():
         
     def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
-        correct_results = np.where(results == Y_test.ravel())[0]
-#        if type(Y_test) != np.array :
-#            return results
-#        else :
-#            return len(correct_results) / len(Y_test), correct_results
-
-        return len(correct_results) / len(Y_test), results, correct_results
+        
+        
+        if type(Y_test) != np.ndarray :
+            return results
+        else :
+            correct_results = np.where(results == Y_test.ravel())[0]
+            return len(correct_results) / len(Y_test), results, correct_results
 
 class LinearDiscriminantClassifier(Classifier):
     
@@ -111,14 +111,15 @@ class LinearDiscriminantClassifier(Classifier):
     def Classify(self,X_test,Y_test=None):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
-        correct_results = np.where(results == Y_test.ravel())[0]
+        
         
 #        return results
-    
-#        if type(Y_test) != np.array :
-#            return results
-#        else :
-        return len(correct_results) / len(Y_test), results, correct_results
+        print(type(Y_test))
+        if type(Y_test) != np.ndarray :
+            return results
+        else :
+            correct_results = np.where(results == Y_test.ravel())[0]
+            return len(correct_results) / len(Y_test), results, correct_results
         
 class TwoStepClassifier(Classifier):
     
