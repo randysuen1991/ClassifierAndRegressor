@@ -7,10 +7,10 @@ import statsmodels.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+from sliced import SlicedInverseRegression
 
 """
-Notice: I should add SIR(sliced inverse regression), PIRE(partial inverse regression), Random forest, decision tree, ...regressions to this file.
+Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
 
 """
 
@@ -110,5 +110,7 @@ class RandForestRegressor(Regressor):
         self.regressor = RandomForestRegressor()
         
         
-        
-        
+class SlicedInverseRegressor(Regressor):
+    def __init__(self):
+        super().__init__()
+        self.regressor = SlicedInverseRegression()
