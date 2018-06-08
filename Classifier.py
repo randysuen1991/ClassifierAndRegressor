@@ -111,10 +111,6 @@ class LinearDiscriminantClassifier(Classifier):
     def Classify(self,X_test,Y_test=None):
         X_test_proj = np.matmul(X_test,self.parameters)
         results = self.classifier.predict(X_test_proj)
-        
-        
-#        return results
-        print(type(Y_test))
         if type(Y_test) != np.ndarray :
             return results
         else :

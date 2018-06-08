@@ -18,28 +18,38 @@ class ModelSelection():
         corr = covariance/(X_std*Y_std)
         
         if abs == True :
+            if num_each_side == 'full' :
+                num_each_side = X_train.shape[1]
+                
             corr = np.abs(corr)
             sorted_index_all = np.argsort(corr.ravel())
-            sorted_index_all = sorted_index[::-1]
+            sorted_index_all = sorted_index_all[::-1]
             sorted_left = sorted_index_all[0:num_each_side]
-            
+            sorted_index = sorted_left
             if both_sides == True:
                 warnings.warn('You should not have picked the both sides of the variable list.')
-            return sorted_left, corr
+            return sorted_index, np.reshape(corr[sorted_index],newshape=(1,len(corr[sorted_index])))
         
         sorted_index_all = np.argsort(corr.ravel())
-        sorted_index_all = sorted_index[::-1]
-        
-        
-            
+        sorted_index_all = sorted_index_all[::-1]
         
         if both_sides == True :
+            
+            # if fill, it will dsciard the weakest one
+            if num_each_side == 'full' :
+                num_each_side = np.floor(X_train.shape[1]/2)
+                
             index_left = sorted_index_all[0:num_each_side]
-            index_right = sorted_index_all[-1:-1-num_each_side]
-            sorted_index = index_left + index_right
+            index_right = sorted_index_all[-1:-1-num_each_side:-1]
+            sorted_index = np.concatenate([index_left,index_right],axis=0)
         else:
-        
-        return sorted_index, corr
+            if num_each_side == 'full' :
+                num_each_side = X_train.shape[1]
+                
+            index_left = sorted_index_all[0:num_each_side]
+            sorted_index = index_left
+            
+        return sorted_index, np.reshape(corr[sorted_index],newshape=(1,len(corr[sorted_index])))
         
     def StepSelection():
         pass
