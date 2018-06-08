@@ -5,7 +5,11 @@ import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.tree import DecisionTreeClassifier
 import DimensionReductionApproaches as DRA
 
 
@@ -99,6 +103,7 @@ class LinearDiscriminantClassifier(Classifier):
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
         X_train_proj = np.matmul(X_train,self.parameters)
+        print(np.where(np.iscomplex(X_train_proj)))
         if self.classify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
