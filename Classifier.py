@@ -102,8 +102,9 @@ class LinearDiscriminantClassifier(Classifier):
     
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
+        
         X_train_proj = np.matmul(X_train,self.parameters)
-        print(np.where(np.iscomplex(X_train_proj)))
+        
         if self.classify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',1))
         elif self.classify_function == SVC :
