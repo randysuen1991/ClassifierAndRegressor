@@ -7,11 +7,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier
 import DimensionReductionApproaches as DRA
-
+import warnings
 
 # This decorator would identify the classifier. This should decorate the Fit function of the 
 # Classifier. 
@@ -76,7 +76,12 @@ class Classifier():
             raise NotImplementedError('Please pass a classify function before fitting the classifier.')
         if self.classify_fun == KNeighborsClassifier :
             self.classifier = self.classify_fun(self.kwargs.get('k',1))
-        elif self.classify_fun == SVC :
+        elif self.classify_fun  in (SVC, AdaBoostClassifier, RandomForestClassifier, GaussianNB,
+                                        DecisionTreeClassifier, GaussianProcessClassifier,
+                                        QuadraticDiscriminantAnalysis,  MultinomialNB,
+                                        BernoulliNB ):
+            if self.classify_fun == MultinomialNB or self.classify_fun == BernoulliNB :
+                warnings.warn('Please notice that the explanatory variables should be discrete data.')
             self.classifier = self.classify_fun()
         
         self.classifier.fit(X_train,Y_train.ravel())
@@ -102,12 +107,15 @@ class LinearDiscriminantClassifier(Classifier):
     
     def Fit(self,X_train,Y_train):
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
-        
         X_train_proj = np.matmul(X_train,self.parameters)
-        
         if self.classify_function == KNeighborsClassifier :
             self.classifier = self.classify_function(self.kwargs.get('k',1))
-        elif self.classify_function == SVC :
+        elif self.classify_function in (SVC, AdaBoostClassifier, RandomForestClassifier, GaussianNB,
+                                        DecisionTreeClassifier, GaussianProcessClassifier,
+                                        QuadraticDiscriminantAnalysis, MultinomialNB,
+                                        BernoulliNB ):
+            if self.classify_fun == MultinomialNB or self.classify_fun == BernoulliNB :
+                warnings.warn('Please notice that the explanatory variables should be discrete data.')
             self.classifier = self.classify_function()
         self.classifier.fit(X_train_proj,Y_train.ravel())
         
