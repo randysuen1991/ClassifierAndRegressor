@@ -51,7 +51,13 @@ class ModelSelection():
             
         return sorted_index, np.reshape(corr[sorted_index],newshape=(1,len(corr[sorted_index])))
         
-    def StepSelection():
+    def FowardSelection():
+        pass
+    
+    def BackwardSelection():
+        pass
+    
+    def StepwiseSelection():
         pass
     
     
