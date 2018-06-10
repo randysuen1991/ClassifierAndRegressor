@@ -10,8 +10,10 @@ from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
 import DimensionReductionApproaches as DRA
 import warnings
+
 
 # This decorator would identify the classifier. This should decorate the Fit function of the 
 # Classifier. 

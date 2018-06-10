@@ -1,6 +1,6 @@
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.decomposition import PCA
-from sklearn.linear_model import Lasso, Ridge, LinearRegression
+from sklearn.linear_model import Lasso, Ridge, LinearRegression, Lars
 from sklearn.ensemble import RandomForestRegressor
 from scipy import stats
 import statsmodels.api as sm
@@ -114,3 +114,9 @@ class SlicedInverseRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.regressor = SlicedInverseRegression()
+        
+class LeastAngleRegressor(Regressor):
+    def __init__(self):
+        super().__init__()
+        self.regressor = Lars()
+        
