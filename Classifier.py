@@ -5,11 +5,12 @@ import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.ensemble import AdaBoostClassifier as Ada
+from sklearn.ensemble import RandomForestClassifier as RF
+from sklearn.gaussian_process import GaussianProcessClassifier as GPC
 from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier as DTC
 from sklearn.linear_model import LogisticRegression
 import DimensionReductionApproaches as DRA
 import warnings
@@ -64,74 +65,106 @@ I should add some new classifier like random forest classifier, decision tree, b
 
 
 
+
 class Classifier():
-    def __init__(self,classify_fun=None,**kwargs):
+    def __init__(self): 
         self.parameters = None
-        self.transformed_X_train = None
-        self.Y_train = None
-        self.kwargs = dict()
-        self.classify_fun = classify_fun
-        
+        self.classifier = None
     
     def Fit(self,X_train,Y_train):
-        if self.classify_fun == None :
-            raise NotImplementedError('Please pass a classify function before fitting the classifier.')
-        if self.classify_fun == KNeighborsClassifier :
-            self.classifier = self.classify_fun(self.kwargs.get('k',1))
-        elif self.classify_fun  in (SVC, AdaBoostClassifier, RandomForestClassifier, GaussianNB,
-                                        DecisionTreeClassifier, GaussianProcessClassifier,
-                                        QuadraticDiscriminantAnalysis,  MultinomialNB,
-                                        BernoulliNB ):
-            if self.classify_fun == MultinomialNB or self.classify_fun == BernoulliNB :
-                warnings.warn('Please notice that the explanatory variables should be discrete data.')
-            self.classifier = self.classify_fun()
-        
-        self.classifier.fit(X_train,Y_train.ravel())
+        self.classifier.fit(X_train,Y_train)
         
     def Classify(self,X_test,Y_test = None):
         results = self.classifier.predict(X_test)
-        
-        
         if type(Y_test) != np.ndarray :
-            return results
+            return None, results, None
         else :
             correct_results = np.where(results == Y_test.ravel())[0]
             return len(correct_results) / len(Y_test), results, correct_results
-
+    
+class AdaBoostClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = Ada()
+        self.kwargs = kwargs
+        
+class RandomForestClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = RF()
+        self.kwargs = kwargs
+        
+class GaussianBayesClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = GaussianNB()
+        self.kwargs = kwargs
+        
+class MultinomialBayesClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = MultinomialNB()
+        
+class BernoulliBayesClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = BernoulliNB()
+        self.kwargs = kwargs
+        
+class GaussianProcessClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = GPC()
+        self.kwargs = kwargs
+        
+class DecisionTreeClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = DTC()
+        self.kwargs = kwargs
+        
+class LogisticClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = LogisticRegression()
+        self.kwargs = kwargs
+        
+class KnearestNeighborClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = KNeighborsClassifier(n_neighbors=kwargs.get('k',1))
+        self.kwargs = kwargs
+        
+class SupportVectorClassifier(Classifier):
+    def __init__(self,**kwargs):
+        super().__init__()
+        self.classifier = SVC()
+        self.kwargs = kwargs
+        
+        
+        
 class LinearDiscriminantClassifier(Classifier):
     
-    def __init__(self,discriminant_fun,classify_fun,**kwargs):
+    def __init__(self,discriminant_fun,classifier,**kwargs):
         super().__init__()
+        self.classifier = classifier
         self.discriminant_function = discriminant_fun
-        self.classify_function = classify_fun
         self.kwargs = kwargs
     
     
-    def Fit(self,X_train,Y_train):
+    def Fit(self,X_train,Y_train) :
         self.parameters = self.discriminant_function(X_train=X_train,Y_train=Y_train,kwargs=self.kwargs)
         X_train_proj = np.matmul(X_train,self.parameters)
-        if self.classify_function == KNeighborsClassifier :
-            self.classifier = self.classify_function(self.kwargs.get('k',1))
-        elif self.classify_function in (SVC, AdaBoostClassifier, RandomForestClassifier, GaussianNB,
-                                        DecisionTreeClassifier, GaussianProcessClassifier,
-                                        QuadraticDiscriminantAnalysis, MultinomialNB,
-                                        BernoulliNB ):
-            if self.classify_fun == MultinomialNB or self.classify_fun == BernoulliNB :
-                warnings.warn('Please notice that the explanatory variables should be discrete data.')
-            self.classifier = self.classify_function()
-        self.classifier.fit(X_train_proj,Y_train.ravel())
-        
+        self.classifier.Fit(X_train_proj,Y_train.ravel())
         return self.parameters
     
 
     def Classify(self,X_test,Y_test=None):
         X_test_proj = np.matmul(X_test,self.parameters)
-        results = self.classifier.predict(X_test_proj)
-        if type(Y_test) != np.ndarray :
-            return results
-        else :
-            correct_results = np.where(results == Y_test.ravel())[0]
-            return len(correct_results) / len(Y_test), results, correct_results
+        return self.classifier.Classify(X_test_proj,Y_test)
+        
+        
+        
         
 class TwoStepClassifier(Classifier):
     
@@ -205,4 +238,3 @@ class TwoStepClassifier(Classifier):
         _, S, _ = np.linalg.svd(Between_centered,full_matrices=False)
         numerator = np.sum(S)
         return numerator/denominator
-    
