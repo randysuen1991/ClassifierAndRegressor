@@ -15,6 +15,9 @@ Notice: I should add , PIRE(partial inverse regression), decision tree, ...regre
 """
 
 
+# There should be stagewise and stepwise regressor.
+
+
 class Regressor():
     def __init__(self):
         self.parameters = None

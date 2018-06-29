@@ -1,6 +1,8 @@
 import sys
-if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path :
+if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' or 'C:\\Users\\randysuen\\Dimension-Reduction-Approaches' not in sys.path :
+    sys.path.append('C:\\Users\\randysuen\\Dimension-Reduction-Approaches')
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
+    
 import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier

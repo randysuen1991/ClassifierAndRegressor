@@ -57,8 +57,7 @@ class ModelSelection():
     def BackwardSelection():
         pass
     
-    def StepwiseSelection():
-        pass
+    
     
     
     
