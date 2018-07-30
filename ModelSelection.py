@@ -3,6 +3,7 @@ import pandas as pd
 import sys
 import warnings
 import ModelEvaluation as ME
+from itertools import combinations
 
 if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path :
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
@@ -23,7 +24,6 @@ class VariableSelection:
         if abs is True:
             if num_each_side == 'full':
                 num_each_side = X_train.shape[1]
-                
             corr = np.abs(corr)
             sorted_index_all = np.argsort(corr.ravel())
             sorted_index_all = sorted_index_all[::-1]
@@ -31,7 +31,7 @@ class VariableSelection:
             sorted_index = sorted_left
             if both_sides is True:
                 warnings.warn('You should not have picked the both sides of the variable list.')
-            return sorted_index, np.reshape(corr[sorted_index],newshape=(1,len(corr[sorted_index])))
+            return sorted_index, np.reshape(corr[sorted_index], newshape=(1, len(corr[sorted_index])))
         
         sorted_index_all = np.argsort(corr.ravel())
         sorted_index_all = sorted_index_all[::-1]
@@ -43,7 +43,7 @@ class VariableSelection:
                 
             index_left = sorted_index_all[0:num_each_side]
             index_right = sorted_index_all[-1:-1-num_each_side:-1]
-            sorted_index = np.concatenate([index_left,index_right],axis=0)
+            sorted_index = np.concatenate([index_left, index_right], axis=0)
         else:
             if num_each_side == 'full':
                 num_each_side = X_train.shape[1]
@@ -58,7 +58,42 @@ class ModelSelection:
 
     def BestSubsetSelection(model, X_train, Y_train, criteria, **kwargs):
         warnings.warn('Please notice that when the number of predictors are too large, the'
-                      'best subset selection would be very time-consuming.')
+                      'best subset selection would be quite time-consuming.')
+        p = X_train.shape[1]
+        candidates = list()
+        predictors_candidates = list()
+        predictors_id = list(range(p))
+        for i in range(1, p):
+            model_candidates = list()
+            combs = list(combinations(predictors_id, i))
+            for comb in combs:
+                model_comb = model()
+                model_comb.Fit(X_train=X_train[:, comb], Y_train=Y_train)
+                model_candidates.append((model_comb, comb))
+
+            rsquareds = [model.rsquared for model, _ in model_candidates]
+            predictors_id = [identity for _, identity in model_candidates]
+
+            index = np.argmax(rsquareds)
+
+            predictor_id = predictors_id[index]
+            model = model_candidates[index]
+
+            candidates.append(model)
+            predictors_candidates.append(predictor_id)
+
+        if criteria is ME.Rsquared or criteria is ME.AdjRsquared:
+            numbers = [criteria(model) for model in candidates]
+            index = np.argmax(numbers)
+        elif criteria is ME.AIC or criteria is ME.BIC or criteria is ME.MallowCp:
+            model_full = model()
+            model_full.Fit(X_train=X_train, Y_train=Y_train)
+            var = model_full.sse / model_full.n
+            numbers = [list(criteria(model, var=var))[0] for model in candidates]
+            index = np.argmin(numbers)
+        else:
+            raise TypeError('Please handle the special criteria.')
+        return predictors_candidates[index]
 
     # This function would return a list of indices indicating which predictors we should select.
     def FowardSelection(model, X_train, Y_train, criteria, **kwargs):

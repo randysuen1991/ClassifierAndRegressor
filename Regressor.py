@@ -10,7 +10,7 @@ import pandas as pd
 from sliced import SlicedInverseRegression
 import ModelEvaluation as ME
 import ModelSelection as MS
-from itertools import combinations
+
 
 """
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
@@ -20,6 +20,7 @@ Notice: I should add , PIRE(partial inverse regression), decision tree, ...regre
 from abc import ABC, abstractmethod
 
 # There should be stagewise and stepwise regressor.
+
 
 class Regressor(ABC):
     def __init__(self):
@@ -169,7 +170,8 @@ class ForwardStepwiseRegressor(Regressor):
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
-    
+
+
 class BackwardStepwiseRegressor(Regressor):
     def __init__(self):
         super().__init__()
