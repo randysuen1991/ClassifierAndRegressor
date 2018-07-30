@@ -173,9 +173,17 @@ class ForwardStepwiseRegressor(Regressor):
 
 
 class BackwardStepwiseRegressor(Regressor):
-    def __init__(self):
+    def __init__(self, criteria=ME.ModelEvaluation.AIC):
         super().__init__()
         self.regressor = LinearRegression()
+        self.criteria = criteria
+        self.selected_X_train = None
 
     def Fit(self, X_train, Y_train):
-        pass
+        self.X_train = X_train
+        self.Y_train = Y_train
+        ids = MS.ModelSelection.BackwardSelection(model=self.regressor, X_train=X_train, Y_train=Y_train)
+        self.selected_X_train = self.X_train[:, ids]
+        self.regressor.fit(X_train, Y_train)
+        self._inference(X_train, Y_train)
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)

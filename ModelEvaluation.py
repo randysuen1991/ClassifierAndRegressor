@@ -6,6 +6,7 @@ import numpy as np
 
 
 def PredictionErrorDecorator(fun):
+
     def decofun(model, **kwargs):
         if model.X_train is None:
             X_train = kwargs.get('X_train')
