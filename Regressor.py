@@ -9,15 +9,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sliced import SlicedInverseRegression
 import ModelEvaluation as ME
+import ModelSelection as MS
+from itertools import combinations
+
 """
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
 
 """
 
+from abc import ABC, abstractmethod
 
 # There should be stagewise and stepwise regressor.
 
-class Regressor:
+class Regressor(ABC):
     def __init__(self):
         self.parameters = None
         self.regressor = None
@@ -28,6 +32,7 @@ class Regressor:
         self.X_train = None
         self.Y_train = None
 
+    @abstractmethod
     def _inference(self, X_train, Y_train):
         if type(X_train) == pd.DataFrame:
             X_train = X_train.values
@@ -55,17 +60,20 @@ class Regressor:
         self.t = self.regressor.coef_ / self.se
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), X_train.shape[0] - X_train.shape[1]))
 
+    @abstractmethod
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
-    
+
+    @abstractmethod
     def Predict(self, X_test):
         prediction = self.regressor.predict(X_test)
         return prediction
-    
+
+    @abstractmethod
     def RegressionPlot(self, X, Y):
         scatter = plt.scatter(X, Y, color='b')
         line = plt.plot(X, self.regressor.predict(X), color='r')
@@ -86,7 +94,7 @@ class PartialLeastSqaureRegressor(Regressor):
         super().__init__()
         self.regressor = PLSRegression(n_components=n_components)
 
-    def Fit(self,X_train,Y_train):
+    def Fit(self, X_train, Y_train):
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)
         
@@ -101,24 +109,29 @@ class LassoRegressor(Regressor):
 
 # Still need to check this class.
 class PrincipalComponentRegressor(Regressor):
-    def __init__(self,n_components):
+    def __init__(self, n_components):
         super().__init__()
         self.n_components = n_components
         self.regressor = LinearRegression()
-    def Fit(self,X_train,Y_train):
+        self.pca = None
+        self.X_train_transform = None
+
+    def Fit(self, X_train, Y_train):
         self.pca = PCA(self.n_components)
         self.X_train_transform = self.pca.fit_transform(X_train)
-        self.regressor.fit(self.X_train_transform,Y_train)
-        self._inference(self.X_train_transform,Y_train)
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train_transform,Y_train) 
-    def Predict(self,X_test):
+        self.regressor.fit(self.X_train_transform, Y_train)
+        self._inference(self.X_train_transform, Y_train)
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train_transform,
+                                                                                             Y_train)
+
+    def Predict(self, X_test):
         X_test_transform = self.pca.transform(X_test)
         prediction = self.regressor.Predict(X_test_transform)
         return prediction
 
 
 class RidgeRegressor(Regressor):
-    def __init__(self,alpha):
+    def __init__(self, alpha):
         super().__init__()
         self.regressor = Ridge(alpha)
         
@@ -133,8 +146,34 @@ class SlicedInverseRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.regressor = SlicedInverseRegression()
-        
+
+
 class LeastAngleRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.regressor = Lars()
+
+
+class ForwardStepwiseRegressor(Regressor):
+    def __init__(self, criteria=ME.ModelEvaluation.AIC):
+        super().__init__()
+        self.regressor = LinearRegression()
+        self.criteria = criteria
+        self.selected_X_train = None
+
+    def Fit(self, X_train, Y_train):
+        self.X_train = X_train
+        self.Y_train = Y_train
+        ids = MS.ModelSelection.FowardSelection(model=self.regressor, X_train=X_train, Y_train=Y_train)
+        self.selected_X_train = self.X_train[:, ids]
+        self.regressor.fit(X_train, Y_train)
+        self._inference(X_train, Y_train)
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
+    
+class BackwardStepwiseRegressor(Regressor):
+    def __init__(self):
+        super().__init__()
+        self.regressor = LinearRegression()
+
+    def Fit(self, X_train, Y_train):
+        pass

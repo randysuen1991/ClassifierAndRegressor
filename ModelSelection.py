@@ -9,7 +9,6 @@ if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not i
 from DimensionReductionApproaches import CenteringDecorator
 
 
-
 class VariableSelection:
     # Till now, Y_train should be a N*1 matrix.
     @CenteringDecorator
@@ -21,7 +20,7 @@ class VariableSelection:
         Y_std = np.std(Y_train)
         corr = covariance/(X_std*Y_std)
         
-        if abs is True :
+        if abs is True:
             if num_each_side == 'full':
                 num_each_side = X_train.shape[1]
                 
@@ -57,8 +56,9 @@ class VariableSelection:
 
 class ModelSelection:
 
-    def BestSubsetSelection():
-        pass
+    def BestSubsetSelection(model, X_train, Y_train, criteria, **kwargs):
+        warnings.warn('Please notice that when the number of predictors are too large, the'
+                      'best subset selection would be very time-consuming.')
 
     # This function would return a list of indices indicating which predictors we should select.
     def FowardSelection(model, X_train, Y_train, criteria, **kwargs):
