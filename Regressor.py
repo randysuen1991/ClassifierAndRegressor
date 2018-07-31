@@ -37,7 +37,7 @@ class Regressor(ABC):
         self.X_train = None
         self.Y_train = None
         self.n = None
-        self.p = None
+        self.k = None
 
     @abstractmethod
     def _inference(self, X_train, Y_train):
@@ -47,15 +47,15 @@ class Regressor(ABC):
         # Store some info of the model.
         self.sst = np.sum((Y_train-np.mean(Y_train, axis=0))**2, axis=0)
         self.n = X_train.shape[0]
-        self.p = X_train.shape[1]
+        self.k = X_train.shape[1]
         self.rsquared = ME.ModelEvaluation.Rsquare(self)
         self.adjrsquared = ME.ModelEvaluation.AdjRsquare(self)
 
         if type(self.regressor) == Lasso:
-            predictions = np.expand_dims(self.regressor.predict(X_train), 1)
+            predictions = np.expand_dims(self.Predict(X_train), 1)
             self.sse = np.sum((predictions - Y_train) ** 2, axis=0)
         else:
-            self.sse = np.sum((self.regressor.predict(X_train) - Y_train) ** 2, axis=0)
+            self.sse = np.sum((self.Predict(X_train) - Y_train) ** 2, axis=0)
         self.sse_scaled = self.sse / float(X_train.shape[0] - X_train.shape[1])
 
         if type(self.sse_scaled) == np.float64:
@@ -77,8 +77,8 @@ class Regressor(ABC):
 
     @abstractmethod
     def Predict(self, X_test):
-        prediction = self.regressor.predict(X_test)
-        return prediction
+        return self.regressor.predict(X_test)
+
 
     @abstractmethod
     def RegressionPlot(self, X, Y):
@@ -210,7 +210,7 @@ class ForwardStagewiseRegressor(Regressor):
         self.X_train = X_train
         self.Y_train = Y_train
         self.n = X_train.shape[0]
-        self.p = X_train.shape[1]
+        self.k = X_train.shape[1]
         assert k <= self.p
         residual = Y_train
         available_predictors = list(range(self.p))
@@ -232,3 +232,10 @@ class ForwardStagewiseRegressor(Regressor):
             abs_cors[index] = 0
 
         self.beta = beta
+        self._inference(X_train, Y_train)
+
+        return 0, self.beta, self.p, self.rsquared
+
+    def Predict(self, X_test):
+        return np.matmul(X_test, self.beta)
+
