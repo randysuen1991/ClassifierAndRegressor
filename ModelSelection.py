@@ -5,14 +5,14 @@ import warnings
 import ModelEvaluation as ME
 from itertools import combinations
 
-if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path :
+if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
-from DimensionReductionApproaches import CenteringDecorator
+from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
 
 
 class VariableSelection:
     # Till now, Y_train should be a N*1 matrix.
-    @CenteringDecorator
+    @CenteringDecorator('X_train', 'Y_train')
     def CorrSelection(X_train, Y_train, both_sides, num_each_side, abs=False, **kwargs):
         if Y_train.shape[1] > 1:
             warnings.warn('The dimension of the Y variable should be 1 now.')

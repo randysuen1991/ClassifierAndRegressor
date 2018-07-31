@@ -11,10 +11,14 @@ from sliced import SlicedInverseRegression
 import ModelEvaluation as ME
 import ModelSelection as MS
 
+import sys
+if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
+    sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
+
+from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
 
 """
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
-
 """
 
 from abc import ABC, abstractmethod
@@ -32,6 +36,8 @@ class Regressor(ABC):
         self.rsquared = None
         self.X_train = None
         self.Y_train = None
+        self.n = None
+        self.p = None
 
     @abstractmethod
     def _inference(self, X_train, Y_train):
@@ -187,3 +193,42 @@ class BackwardStepwiseRegressor(Regressor):
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
+
+
+# The response should be univariate.
+class ForwardStagewiseRegressor(Regressor):
+    def __init__(self):
+        super().__init__()
+        self.beta = None
+
+    @NormalizingDecorator('X_train', 'Y_train')
+    @CenteringDecorator('X_train', 'Y_train')
+    def Fit(self, X_train, Y_train, **kwargs):
+        eps = kwargs.get('eps', 0.01)
+        k = kwargs.get('k', 100)
+        lower_bound = kwargs.get('lower_bound', 0)
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.n = X_train.shape[0]
+        self.p = X_train.shape[1]
+        assert k <= self.p
+        residual = Y_train
+        available_predictors = list(range(self.p))
+        cors = np.zeros(shape=(self.p, ))
+        beta = np.zeros(shape=(self.p, ))
+        for i in range(k):
+            for predictor in available_predictors:
+                cors[predictor] = np.matmul(residual.T, X_train[:, predictor])
+            abs_cors = [np.abs(cor) for cor in cors]
+            index = np.argmax(abs_cors)
+            if abs_cors[index] < lower_bound:
+                break
+            sign = np.sign(cors[index])
+            beta[index] += sign * eps
+            residual -= sign * eps * X_train[:, index]
+
+            available_predictors.remove(index)
+            cors[index] = 0
+            abs_cors[index] = 0
+
+        self.beta = beta
