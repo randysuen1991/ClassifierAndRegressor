@@ -21,12 +21,10 @@ from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorato
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
 """
 
-from abc import ABC, abstractmethod
-
 # There should be stagewise and stepwise regressor.
 
 
-class Regressor(ABC):
+class Regressor():
     def __init__(self):
         self.parameters = None
         self.regressor = None
@@ -39,7 +37,6 @@ class Regressor(ABC):
         self.n = None
         self.k = None
 
-    @abstractmethod
     def _inference(self, X_train, Y_train):
         if type(X_train) == pd.DataFrame:
             X_train = X_train.values
@@ -67,7 +64,6 @@ class Regressor(ABC):
         self.t = self.regressor.coef_ / self.se
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), X_train.shape[0] - X_train.shape[1]))
 
-    @abstractmethod
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
@@ -75,18 +71,19 @@ class Regressor(ABC):
         self._inference(X_train, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
-    @abstractmethod
     def Predict(self, X_test):
         return self.regressor.predict(X_test)
 
-
-    @abstractmethod
     def RegressionPlot(self, X, Y):
         scatter = plt.scatter(X, Y, color='b')
         line = plt.plot(X, self.regressor.predict(X), color='r')
         plt.ylabel('response')
         plt.xlabel('explanatory')
-        plt.legend(handles=[scatter, line[0], ], labels=['Scatter Plot', 'Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,self.regressor.coef_,self.regressor.score(X,Y))],loc='best')
+        plt.legend(handles=[scatter, line[0], ],
+                   labels=['Scatter Plot', 'Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,
+                                                                                          self.regressor.coef_,
+                                                                                          self.regressor.score(X, Y))],
+                   loc='best')
         plt.title('Scatter Plot and Regression')
 
 
@@ -200,17 +197,21 @@ class ForwardStagewiseRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.beta = None
+        self.X_mean = None
+        self.Y_mean = None
 
-    @NormalizingDecorator('X_train', 'Y_train')
     @CenteringDecorator('X_train', 'Y_train')
+    @NormalizingDecorator('X_train', 'Y_train')
     def Fit(self, X_train, Y_train, **kwargs):
-        eps = kwargs.get('eps', 0.01)
-        k = kwargs.get('k', 100)
-        lower_bound = kwargs.get('lower_bound', 0)
         self.X_train = X_train
         self.Y_train = Y_train
+        self.X_mean = np.mean(X_train, axis=0)
+        self.Y_mean = np.mean(Y_train, axis=0)
         self.n = X_train.shape[0]
         self.k = X_train.shape[1]
+        eps = kwargs.get('eps', 0.01)
+        k = kwargs.get('k', self.k)
+        lower_bound = kwargs.get('lower_bound', 0)
         assert k <= self.p
         residual = Y_train
         available_predictors = list(range(self.p))
@@ -237,5 +238,12 @@ class ForwardStagewiseRegressor(Regressor):
         return 0, self.beta, self.p, self.rsquared
 
     def Predict(self, X_test):
-        return np.matmul(X_test, self.beta)
+        X_test = X_test - self.X_mean
+        return np.matmul(X_test, self.beta) - self.Y_mean
 
+
+if __name__ == '__main__':
+    a = np.array([[1, 2, 3], [5, 4, 6], [6, 7, 4]])
+    b = np.array([[5], [3], [7]])
+    r = ForwardStagewiseRegressor()
+    r.Fit(X_train=a, Y_train=b)
