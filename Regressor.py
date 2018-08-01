@@ -47,8 +47,12 @@ class Regressor():
     @X_train.setter
     def X_train(self, X_train):
         self._X_train = X_train
-        self.x_k = X_train.shape[1]
-        self.n = X_train.shape[0]
+        try:
+            self.x_k = X_train.shape[1]
+            self.n = X_train.shape[0]
+        except IndexError:
+            self.x_k = 1
+            self.n = X_train.shape[0]
 
     @property
     def Y_train(self):
@@ -95,7 +99,12 @@ class Regressor():
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
-        self.regressor.fit(X_train, Y_train)
+        try:
+            self.regressor.fit(X_train, Y_train)
+        except ValueError:
+            self.X_train = np.reshape(X_train, newshape=(len(X_train), 1))
+            self.regressor.fit(self.X_train, Y_train)
+
         self._inference(X_train, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
@@ -196,7 +205,7 @@ class ForwardStepwiseRegressor(Regressor):
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
-        ids = MS.ModelSelection.FowardSelection(model=self.regressor, X_train=X_train, Y_train=Y_train)
+        ids = MS.ModelSelection.FowardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train, Y_train=Y_train)
         self.selected_X_train = self.X_train[:, ids]
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)
@@ -213,7 +222,7 @@ class BackwardStepwiseRegressor(Regressor):
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
-        ids = MS.ModelSelection.BackwardSelection(model=self.regressor, X_train=X_train, Y_train=Y_train)
+        ids = MS.ModelSelection.BackwardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train, Y_train=Y_train)
         self.selected_X_train = self.X_train[:, ids]
         self.regressor.fit(X_train, Y_train)
         self._inference(X_train, Y_train)

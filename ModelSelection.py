@@ -58,7 +58,7 @@ class VariableSelection:
 
 class ModelSelection:
 
-    def BestSubsetSelection(model, X_train, Y_train, criteria, **kwargs):
+    def BestSubsetSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         warnings.warn('Please notice that when the number of predictors are too large, the'
                       'best subset selection would be quite time-consuming.')
         p = X_train.shape[1]
@@ -84,10 +84,10 @@ class ModelSelection:
             candidates.append(model)
             predictors_candidates.append(predictor_id)
 
-        if criteria is ME.Rsquared or criteria is ME.AdjRsquared:
+        if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
             numbers = [criteria(model) for model in candidates]
             index = np.argmax(numbers)
-        elif criteria is ME.AIC or criteria is ME.BIC or criteria is ME.MallowCp:
+        elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
@@ -98,7 +98,7 @@ class ModelSelection:
         return predictors_candidates[index]
 
     # This function would return a list of indices indicating which predictors we should select.
-    def FowardSelection(model, X_train, Y_train, criteria, **kwargs):
+    def FowardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         p = X_train.shape[1]
         candidates = list()
         predictors_order = list()
@@ -109,7 +109,7 @@ class ModelSelection:
                 add_model = model()
                 try:
                     add_predictors = np.concatenate((predictors, X_train[:, j]), axis=1)
-                except TypeError:
+                except UnboundLocalError:
                     add_predictors = X_train[:, j]
                 add_model.Fit(X_train=add_predictors, Y_train=Y_train)
                 model_candidates.append((add_model, j))
@@ -129,10 +129,12 @@ class ModelSelection:
 
             predictors = model.X_train
 
-        if criteria is ME.Rsquared or criteria is ME.AdjRsquared:
+        if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
             numbers = [criteria(model) for model in candidates]
             index = np.argmax(numbers)
-        elif criteria is ME.AIC or criteria is ME.BIC or criteria is ME.MallowCp:
+        elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
+                criteria is ME.ModelEvaluation.MallowCp:
+
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
@@ -143,7 +145,7 @@ class ModelSelection:
 
         return predictors_order[:index+1]
 
-    def BackwardSelection(model, X_train, Y_train, criteria, **kwargs):
+    def BackwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         if X_train.shape[1] > X_train.shape[0]:
             raise ValueError('The number of predictors should not be larger the one of the sample size.')
         p = X_train.shape[1]
@@ -176,10 +178,11 @@ class ModelSelection:
             candidates.append(model)
             predictors_order.append(predictor_id)
 
-        if criteria is ME.Rsquared or criteria is ME.AdjRsquared:
+        if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
             numbers = [criteria(model) for model in candidates]
             index = np.argmax(numbers)
-        elif criteria is ME.AIC or criteria is ME.BIC or criteria is ME.MallowCp:
+        elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
+                criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
