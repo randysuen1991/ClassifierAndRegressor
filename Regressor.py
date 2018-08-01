@@ -26,27 +26,47 @@ Notice: I should add , PIRE(partial inverse regression), decision tree, ...regre
 
 class Regressor():
     def __init__(self):
-        self.parameters = None
+        self.parameters = dict()
         self.regressor = None
         self.sse = None
         self.sst = None
         self.adjrsquared = None
         self.rsquared = None
-        self.X_train = None
-        self.Y_train = None
+        self._X_train = None
+        self._Y_train = None
         self.n = None
-        self.k = None
+        # x_k refers to the number of the predictors of X_train
+        self.x_k = None
+        # y_k refers to the number of the responses of Y_train
+        self.y_k = None
+
+    @property
+    def X_train(self):
+        return self._X_train
+
+    @X_train.setter
+    def X_train(self, X_train):
+        self._X_train = X_train
+        self.x_k = X_train.shape[1]
+        self.n = X_train.shape[0]
+
+    @property
+    def Y_train(self):
+        return self._Y_train
+
+    @Y_train.setter
+    def Y_train(self, Y_train):
+        self._Y_train = Y_train
+        self.y_k = Y_train.shape[1]
 
     def _inference(self, X_train, Y_train):
         if type(X_train) == pd.DataFrame:
             X_train = X_train.values
+        if type(Y_train) == pd.DataFrame:
+            Y_train = Y_train.values
 
         # Store some info of the model.
         self.sst = np.sum((Y_train-np.mean(Y_train, axis=0))**2, axis=0)
-        self.n = X_train.shape[0]
-        self.k = X_train.shape[1]
-        self.rsquared = ME.ModelEvaluation.Rsquare(self)
-        self.adjrsquared = ME.ModelEvaluation.AdjRsquare(self)
 
         if type(self.regressor) == Lasso:
             predictions = np.expand_dims(self.Predict(X_train), 1)
@@ -55,14 +75,22 @@ class Regressor():
             self.sse = np.sum((self.Predict(X_train) - Y_train) ** 2, axis=0)
         self.sse_scaled = self.sse / float(X_train.shape[0] - X_train.shape[1])
 
+        print(self.sse_scaled)
+
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
 
         self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(X_train.T, X_train))))
                             for i in range(len(self.sse_scaled))])
+        try:
+            self.t = self.regressor.coef_ / self.se
+        except AttributeError:
+            self.t = self.parameters['beta'] / self.se
 
-        self.t = self.regressor.coef_ / self.se
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), X_train.shape[0] - X_train.shape[1]))
+
+        self.rsquared = ME.ModelEvaluation.Rsquared(self)
+        self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
 
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
@@ -196,7 +224,6 @@ class BackwardStepwiseRegressor(Regressor):
 class ForwardStagewiseRegressor(Regressor):
     def __init__(self):
         super().__init__()
-        self.beta = None
         self.X_mean = None
         self.Y_mean = None
 
@@ -207,16 +234,14 @@ class ForwardStagewiseRegressor(Regressor):
         self.Y_train = Y_train
         self.X_mean = np.mean(X_train, axis=0)
         self.Y_mean = np.mean(Y_train, axis=0)
-        self.n = X_train.shape[0]
-        self.k = X_train.shape[1]
         eps = kwargs.get('eps', 0.01)
-        k = kwargs.get('k', self.k)
+        k = kwargs.get('k', self.x_k)
         lower_bound = kwargs.get('lower_bound', 0)
-        assert k <= self.p
+        assert k <= self.x_k
         residual = Y_train
-        available_predictors = list(range(self.p))
-        cors = np.zeros(shape=(self.p, ))
-        beta = np.zeros(shape=(self.p, ))
+        available_predictors = list(range(k))
+        cors = np.zeros(shape=(k, ))
+        beta = np.zeros(shape=(k, ))
         for i in range(k):
             for predictor in available_predictors:
                 cors[predictor] = np.matmul(residual.T, X_train[:, predictor])
@@ -226,24 +251,17 @@ class ForwardStagewiseRegressor(Regressor):
                 break
             sign = np.sign(cors[index])
             beta[index] += sign * eps
-            residual -= sign * eps * X_train[:, index]
+            residual -= sign * eps * np.expand_dims(X_train[:, index], axis=1)
 
             available_predictors.remove(index)
             cors[index] = 0
             abs_cors[index] = 0
 
-        self.beta = beta
+        self.parameters['beta'] = beta
         self._inference(X_train, Y_train)
 
-        return 0, self.beta, self.p, self.rsquared
+        return 0, self.parameters['beta'], self.p, self.rsquared
 
     def Predict(self, X_test):
         X_test = X_test - self.X_mean
-        return np.matmul(X_test, self.beta) - self.Y_mean
-
-
-if __name__ == '__main__':
-    a = np.array([[1, 2, 3], [5, 4, 6], [6, 7, 4]])
-    b = np.array([[5], [3], [7]])
-    r = ForwardStagewiseRegressor()
-    r.Fit(X_train=a, Y_train=b)
+        return np.matmul(X_test, self.parameters['beta'])

@@ -46,10 +46,10 @@ class ModelEvaluation:
 
     @PredictionErrorDecorator
     def MallowCp(model, var):
-        return (model.sse + 2 * model.p * var) / model.n
+        return (model.sse + 2 * model.x_k * var) / model.n
 
     def Rsquared(model):
         return 1 - model.sse / model.sst
 
     def AdjRsquared(model):
-        return 1 - (1-ModelEvaluation.Rsquare(model)) * (model.n - 1) / (model.n - model.p - 1)
+        return 1 - (1-ModelEvaluation.Rsquared(model)) * (model.n - 1) / (model.n - model.x_k - 1)
