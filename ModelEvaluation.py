@@ -19,7 +19,7 @@ def PredictionErrorDecorator(fun):
                     predictors = X_train[:, 0:i]
                     # refit the model.
                     model.Fit(X_train=predictors, Y_train=Y_train)
-                    yield fun(model, var)
+                    return fun(model, var)
 
             except TypeError:
                 raise TypeError('Please specify the arguments: X_train, Y_train, k.')
@@ -29,7 +29,7 @@ def PredictionErrorDecorator(fun):
             if var is None:
                 raise ValueError('You should give the estimated variance or give the not train model with the full '
                                  'set of predictors.')
-            yield fun(model, var)
+            return fun(model, var)
 
     return decofun
 

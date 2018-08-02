@@ -99,35 +99,34 @@ class ModelSelection:
 
     # This function would return a list of indices indicating which predictors we should select.
     def FowardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
-        p = X_train.shape[1]
+        p = kwargs.get('p', X_train.shape[1])
         candidates = list()
         predictors_order = list()
         available_predictors = list(range(p))
         for i in range(p):
             model_candidates = list()
+            print(i)
             for j in available_predictors:
                 add_model = model()
                 try:
-                    add_predictors = np.concatenate((predictors, X_train[:, j]), axis=1)
+                    tmp = X_train[:, j].reshape(-1, 1)
+                    add_predictors = np.concatenate((predictors, tmp), axis=1)
                 except UnboundLocalError:
-                    add_predictors = X_train[:, j]
+                    add_predictors = X_train[:, j].reshape(-1, 1)
                 add_model.Fit(X_train=add_predictors, Y_train=Y_train)
                 model_candidates.append((add_model, j))
 
-            rsquareds = [model.rsquared for model, _ in model_candidates]
-            predictors_id = [identity for _, identity in model_candidates]
-
+            rsquareds = [_model.rsquared for _model, _ in model_candidates]
             index = np.argmax(rsquareds)
 
-            predictor_id = predictors_id[index]
-            model = model_candidates[index]
+            model_selected, predictor_id = model_candidates[index]
 
             available_predictors.remove(predictor_id)
 
-            candidates.append(model)
+            candidates.append(model_selected)
             predictors_order.append(predictor_id)
-
-            predictors = model.X_train
+            print(predictors_order)
+            predictors = model_selected.X_train
 
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
             numbers = [criteria(model) for model in candidates]
@@ -138,7 +137,9 @@ class ModelSelection:
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
-            numbers = [list(criteria(model, var=var))[0] for model in candidates]
+            var = var[0]
+            numbers = [criteria(_model, var=var) for _model in candidates]
+            print(numbers)
             index = np.argmin(numbers)
         else:
             raise TypeError('Please handle the special criteria.')

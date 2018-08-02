@@ -53,6 +53,7 @@ class Regressor():
         except IndexError:
             self.x_k = 1
             self.n = X_train.shape[0]
+            self._X_train = self._X_train.reshape(-1, 1)
 
     @property
     def Y_train(self):
@@ -61,37 +62,35 @@ class Regressor():
     @Y_train.setter
     def Y_train(self, Y_train):
         self._Y_train = Y_train
-        self.y_k = Y_train.shape[1]
+        try:
+            self.y_k = Y_train.shape[1]
+        except IndexError:
+            self.y_k = Y_train.shape[0]
+            self._Y_train = self._Y_train.reshape(-1, 1)
 
-    def _inference(self, X_train, Y_train):
-        if type(X_train) == pd.DataFrame:
-            X_train = X_train.values
-        if type(Y_train) == pd.DataFrame:
-            Y_train = Y_train.values
+    def _inference(self):
 
         # Store some info of the model.
-        self.sst = np.sum((Y_train-np.mean(Y_train, axis=0))**2, axis=0)
+        self.sst = np.sum((self.Y_train-np.mean(self.Y_train, axis=0))**2, axis=0)
 
         if type(self.regressor) == Lasso:
-            predictions = np.expand_dims(self.Predict(X_train), 1)
-            self.sse = np.sum((predictions - Y_train) ** 2, axis=0)
+            predictions = np.expand_dims(self.Predict(self.X_train), 1)
+            self.sse = np.sum((predictions - self.Y_train) ** 2, axis=0)
         else:
-            self.sse = np.sum((self.Predict(X_train) - Y_train) ** 2, axis=0)
-        self.sse_scaled = self.sse / float(X_train.shape[0] - X_train.shape[1])
-
-        print(self.sse_scaled)
+            self.sse = np.sum((self.Predict(self.X_train) - self.Y_train) ** 2, axis=0)
+        self.sse_scaled = self.sse / float(self.X_train.shape[0] - self.X_train.shape[1])
 
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
 
-        self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(X_train.T, X_train))))
+        self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train))))
                             for i in range(len(self.sse_scaled))])
         try:
             self.t = self.regressor.coef_ / self.se
         except AttributeError:
             self.t = self.parameters['beta'] / self.se
 
-        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), X_train.shape[0] - X_train.shape[1]))
+        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
 
         self.rsquared = ME.ModelEvaluation.Rsquared(self)
         self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
@@ -99,13 +98,8 @@ class Regressor():
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
-        try:
-            self.regressor.fit(X_train, Y_train)
-        except ValueError:
-            self.X_train = np.reshape(X_train, newshape=(len(X_train), 1))
-            self.regressor.fit(self.X_train, Y_train)
-
-        self._inference(X_train, Y_train)
+        self.regressor.fit(self.X_train, self.Y_train)
+        self._inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
     def Predict(self, X_test):
@@ -205,10 +199,11 @@ class ForwardStepwiseRegressor(Regressor):
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
-        ids = MS.ModelSelection.FowardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train, Y_train=Y_train)
+        ids = MS.ModelSelection.FowardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
+                                                Y_train=Y_train, p=10)
         self.selected_X_train = self.X_train[:, ids]
         self.regressor.fit(X_train, Y_train)
-        self._inference(X_train, Y_train)
+        self._inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
 
