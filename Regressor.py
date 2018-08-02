@@ -39,6 +39,7 @@ class Regressor():
         self.x_k = None
         # y_k refers to the number of the responses of Y_train
         self.y_k = None
+        self.p = None
 
     @property
     def X_train(self):
@@ -83,8 +84,27 @@ class Regressor():
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
 
-        self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train))))
-                            for i in range(len(self.sse_scaled))])
+        # a = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train)))) for i in range(len(self.sse_scaled))])
+        # b = np.array([np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train))) for i in range(len(self.sse_scaled))])
+        # d = np.array([np.sqrt(np.diagonal(np.linalg.inv(np.dot(self.X_train.T, self.X_train))))])
+        # e = np.array([np.diagonal(np.linalg.inv(np.dot(self.X_train.T, self.X_train)))])
+
+        # print('a:', a)
+        # print('b:', b)
+        # print('d:', d)
+        # print('e:', e)
+        # print('sse:', self.sse_scaled)
+        # print('=====')
+        self.rsquared = self.regressor.score(self.X_train, self.Y_train)
+        self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
+
+        try:
+            centered_X_train = self.X_train - np.mean(self.X_train, axis=0)
+            self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] *
+                                                    np.linalg.inv(np.dot(centered_X_train.T, centered_X_train))))
+                                for i in range(len(self.sse_scaled))])
+        except np.linalg.linalg.LinAlgError:
+            return
         try:
             self.t = self.regressor.coef_ / self.se
         except AttributeError:
@@ -92,8 +112,8 @@ class Regressor():
 
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
 
-        self.rsquared = ME.ModelEvaluation.Rsquared(self)
-        self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
+
+
 
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
@@ -196,15 +216,15 @@ class ForwardStepwiseRegressor(Regressor):
         self.criteria = criteria
         self.selected_X_train = None
 
-    def Fit(self, X_train, Y_train):
-        self.X_train = X_train
-        self.Y_train = Y_train
+    def Fit(self, X_train, Y_train, **kwargs):
         ids = MS.ModelSelection.FowardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
-                                                Y_train=Y_train, p=10)
-        self.selected_X_train = self.X_train[:, ids]
-        self.regressor.fit(X_train, Y_train)
+                                                Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        print(ids)
+        self.X_train = X_train[:, ids]
+        self.Y_train = Y_train
+        self.regressor.fit(self.X_train, self.Y_train)
         self._inference()
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train, self.Y_train)
 
 
 class BackwardStepwiseRegressor(Regressor):
@@ -215,13 +235,12 @@ class BackwardStepwiseRegressor(Regressor):
         self.selected_X_train = None
 
     def Fit(self, X_train, Y_train):
-        self.X_train = X_train
-        self.Y_train = Y_train
         ids = MS.ModelSelection.BackwardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train, Y_train=Y_train)
-        self.selected_X_train = self.X_train[:, ids]
-        self.regressor.fit(X_train, Y_train)
-        self._inference(X_train, Y_train)
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
+        self.X_train = self.X_train[:, ids]
+        self.Y_train = Y_train
+        self.regressor.fit(self.X_train, Y_train)
+        self._inference()
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train, Y_train)
 
 
 # The response should be univariate.

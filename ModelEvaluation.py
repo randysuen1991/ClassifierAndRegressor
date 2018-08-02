@@ -38,18 +38,18 @@ class ModelEvaluation:
 
     @PredictionErrorDecorator
     def AIC(model, var):
-        return (model.sse + 2 * model.p * var) / model.n * var
+        yield (model.sse + 2 * model.x_k * var) / model.n * var
 
     @PredictionErrorDecorator
     def BIC(model, var):
-        return (model.sse + np.log(model.n) * model.p * var) / model.n
+        yield (model.sse + np.log(model.n) * model.x_k * var) / model.n
 
     @PredictionErrorDecorator
     def MallowCp(model, var):
-        return (model.sse + 2 * model.x_k * var) / model.n
+        yield (model.sse + 2 * model.x_k * var) / model.n
 
     def Rsquared(model):
         return 1 - model.sse / model.sst
 
     def AdjRsquared(model):
-        return 1 - (1-ModelEvaluation.Rsquared(model)) * (model.n - 1) / (model.n - model.x_k - 1)
+        return 1 - (1-model.rsquared) * (model.n - 1) / (model.n - model.x_k - 1)

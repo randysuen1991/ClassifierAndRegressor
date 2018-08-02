@@ -98,14 +98,13 @@ class ModelSelection:
         return predictors_candidates[index]
 
     # This function would return a list of indices indicating which predictors we should select.
-    def FowardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
+    def FowardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
         p = kwargs.get('p', X_train.shape[1])
         candidates = list()
         predictors_order = list()
         available_predictors = list(range(p))
         for i in range(p):
             model_candidates = list()
-            print(i)
             for j in available_predictors:
                 add_model = model()
                 try:
@@ -125,7 +124,6 @@ class ModelSelection:
 
             candidates.append(model_selected)
             predictors_order.append(predictor_id)
-            print(predictors_order)
             predictors = model_selected.X_train
 
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
@@ -138,8 +136,7 @@ class ModelSelection:
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
             var = var[0]
-            numbers = [criteria(_model, var=var) for _model in candidates]
-            print(numbers)
+            numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
         else:
             raise TypeError('Please handle the special criteria.')
