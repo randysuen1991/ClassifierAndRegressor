@@ -61,37 +61,35 @@ class ModelSelection:
     def BestSubsetSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         warnings.warn('Please notice that when the number of predictors are too large, the'
                       'best subset selection would be quite time-consuming.')
-        p = X_train.shape[1]
+        p = kwargs.get('p', X_train.shape[1])
         candidates = list()
         predictors_candidates = list()
-        predictors_id = list(range(p))
         for i in range(1, p):
             model_candidates = list()
-            combs = list(combinations(predictors_id, i))
+            combs = list(combinations(range(p), i))
             for comb in combs:
                 model_comb = model()
                 model_comb.Fit(X_train=X_train[:, comb], Y_train=Y_train)
                 model_candidates.append((model_comb, comb))
 
-            rsquareds = [model.rsquared for model, _ in model_candidates]
-            predictors_id = [identity for _, identity in model_candidates]
+            rsquareds = [_model.rsquared for _model, _ in model_candidates]
 
             index = np.argmax(rsquareds)
 
-            predictor_id = predictors_id[index]
-            model = model_candidates[index]
+            model_selected, predictor_id = model_candidates[index]
 
-            candidates.append(model)
+            candidates.append(model_selected)
             predictors_candidates.append(predictor_id)
 
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
-            numbers = [criteria(model) for model in candidates]
+            numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
-        elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or criteria is ME.ModelEvaluation.MallowCp:
+        elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
+                criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
-            numbers = [list(criteria(model, var=var))[0] for model in candidates]
+            numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
         else:
             raise TypeError('Please handle the special criteria.')
@@ -125,9 +123,8 @@ class ModelSelection:
             candidates.append(model_selected)
             predictors_order.append(predictor_id)
             predictors = model_selected.X_train
-
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
-            numbers = [criteria(model) for model in candidates]
+            numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
         elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
                 criteria is ME.ModelEvaluation.MallowCp:
@@ -144,54 +141,49 @@ class ModelSelection:
         return predictors_order[:index+1]
 
     def BackwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
+        p = kwargs.get('p', X_train.shape[1])
+        X_train = X_train[:, :p]
         if X_train.shape[1] > X_train.shape[0]:
             raise ValueError('The number of predictors should not be larger the one of the sample size.')
-        p = X_train.shape[1]
+
         candidates = list()
         predictors_order = list()
+        # this list stores the index of the predictors which are ok to be deleted.
         available_predictors = list(range(p))
-
         model_full = model()
         model_full.Fit(X_train=X_train, Y_train=Y_train)
         candidates.append(model_full)
-        for i in range(p):
+        for i in range(p-1):
             model_candidates = list()
             predictors = candidates[-1].X_train
-            for j in available_predictors:
+            for j, k in enumerate(available_predictors):
                 sub_model = model()
                 sub_predictors = np.delete(predictors, j, axis=1)
                 sub_model.Fit(X_train=sub_predictors, Y_train=Y_train)
-                model_candidates.append((sub_model, j))
+                model_candidates.append((sub_model, k))
 
-            rsquareds = [model.rsquared for model, _ in model_candidates]
-            predictors_id = [identity for _, identity in model_candidates]
-
+            rsquareds = [_model.rsquared for _model, _ in model_candidates]
             index = np.argmax(rsquareds)
-
-            predictor_id = predictors_id[index]
-            model = model_candidates[index]
+            model_selected, predictor_id = model_candidates[index]
 
             available_predictors.remove(predictor_id)
 
-            candidates.append(model)
+            candidates.append(model_selected)
             predictors_order.append(predictor_id)
-
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
-            numbers = [criteria(model) for model in candidates]
+            numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
         elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
                 criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
-            numbers = [list(criteria(model, var=var))[0] for model in candidates]
+            numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
         else:
             raise TypeError('Please handle the special criteria.')
-
         predictors = list(range(p))
-        to_remove = predictors_order[:index+1]
+        to_remove = predictors_order[:index]
         for predictor in to_remove:
             predictors.remove(predictor)
-
         return predictors

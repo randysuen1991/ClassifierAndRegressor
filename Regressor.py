@@ -224,7 +224,7 @@ class ForwardStepwiseRegressor(Regressor):
         self.regressor.fit(self.X_train, self.Y_train)
         self._inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
-               self.regressor.score(self.X_train, self.Y_train), ids
+            self.regressor.score(self.X_train, self.Y_train), ids
 
 
 class BackwardStepwiseRegressor(Regressor):
@@ -234,13 +234,32 @@ class BackwardStepwiseRegressor(Regressor):
         self.criteria = criteria
         self.selected_X_train = None
 
-    def Fit(self, X_train, Y_train):
-        ids = MS.ModelSelection.BackwardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train, Y_train=Y_train)
-        self.X_train = self.X_train[:, ids]
+    def Fit(self, X_train, Y_train, **kwargs):
+        ids = MS.ModelSelection.BackwardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
+                                                  Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        self.X_train = X_train[:, ids]
         self.Y_train = Y_train
-        self.regressor.fit(self.X_train, Y_train)
+        self.regressor.fit(self.X_train, self.Y_train)
         self._inference()
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train, Y_train)
+        return self.regressor.intercept_, self.regressor.coef_, self.p, \
+            self.regressor.score(self.X_train, self.Y_train), ids
+
+
+class BestsubsetRegressor(Regressor):
+    def __init__(self, criteria=ME.ModelEvaluation.AIC):
+        super().__init__()
+        self.regressor = LinearRegression()
+        self.criteria = criteria
+
+    def Fit(self, X_train, Y_train, **kwargs):
+        ids = MS.ModelSelection.BestSubsetSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
+                                                    Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        self.X_train = X_train[:, ids]
+        self.Y_train = Y_train
+        self.regressor.fit(self.X_train, self.Y_train)
+        self._inference()
+        return self.regressor.intercept_, self.regressor.coef_, self.p, \
+               self.regressor.score(self.X_train, self.Y_train), ids
 
 
 # The response should be univariate.
