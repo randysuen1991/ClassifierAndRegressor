@@ -1,4 +1,4 @@
-# This is base codes for the other repositories.
+# This is a base repository for the other repositories.
 In this repository, I store some base codes for the other repositories.
 
 
