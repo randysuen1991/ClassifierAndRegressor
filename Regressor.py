@@ -112,9 +112,6 @@ class Regressor():
 
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
 
-
-
-
     def Fit(self, X_train, Y_train):
         self.X_train = X_train
         self.Y_train = Y_train
@@ -138,7 +135,7 @@ class Regressor():
         plt.title('Scatter Plot and Regression')
 
 
-class OrdianryLeastSquareRegressor(Regressor):
+class OrdinaryLeastSquaredRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.regressor = LinearRegression()
@@ -217,8 +214,8 @@ class ForwardStepwiseRegressor(Regressor):
         self.selected_X_train = None
 
     def Fit(self, X_train, Y_train, **kwargs):
-        ids = MS.ModelSelection.FowardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
-                                                Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        ids = MS.ModelSelection.FowardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+                                                Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
@@ -235,10 +232,11 @@ class BackwardStepwiseRegressor(Regressor):
         self.selected_X_train = None
 
     def Fit(self, X_train, Y_train, **kwargs):
-        ids = MS.ModelSelection.BackwardSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
-                                                  Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        ids = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+                                                  Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
+
         self.regressor.fit(self.X_train, self.Y_train)
         self._inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
@@ -252,8 +250,8 @@ class BestsubsetRegressor(Regressor):
         self.criteria = criteria
 
     def Fit(self, X_train, Y_train, **kwargs):
-        ids = MS.ModelSelection.BestSubsetSelection(model=OrdianryLeastSquareRegressor, X_train=X_train,
-                                                    Y_train=Y_train, p=kwargs.get('p', self.x_k))
+        ids = MS.ModelSelection.BestSubsetSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+                                                    Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)

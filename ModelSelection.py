@@ -138,6 +138,7 @@ class ModelSelection:
         else:
             raise TypeError('Please handle the special criteria.')
 
+        print(predictors_order[:index+1])
         return predictors_order[:index+1]
 
     def BackwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
@@ -186,4 +187,5 @@ class ModelSelection:
         to_remove = predictors_order[:index]
         for predictor in to_remove:
             predictors.remove(predictor)
+        print(predictors)
         return predictors
