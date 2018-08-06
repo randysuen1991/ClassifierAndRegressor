@@ -216,6 +216,7 @@ class ForwardStepwiseRegressor(Regressor):
     def Fit(self, X_train, Y_train, **kwargs):
         ids = MS.ModelSelection.FowardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                 Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
+        print(ids)
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
@@ -234,6 +235,7 @@ class BackwardStepwiseRegressor(Regressor):
     def Fit(self, X_train, Y_train, **kwargs):
         ids = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                   Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
+        print(ids)
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
 
