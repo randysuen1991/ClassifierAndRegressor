@@ -16,7 +16,7 @@ if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.pa
     sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
 if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
-from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
+from DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 """
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
@@ -25,7 +25,7 @@ Notice: I should add , PIRE(partial inverse regression), decision tree, ...regre
 # There should be stagewise and stepwise regressor.
 
 
-class Regressor():
+class Regressor:
     def __init__(self):
         self.parameters = dict()
         self.regressor = None
@@ -70,7 +70,7 @@ class Regressor():
             self.y_k = Y_train.shape[0]
             self._Y_train = self._Y_train.reshape(-1, 1)
 
-    def _inference(self):
+    def _Inference(self):
 
         # Store some info of the model.
         self.sst = np.sum((self.Y_train-np.mean(self.Y_train, axis=0))**2, axis=0)
@@ -117,7 +117,7 @@ class Regressor():
         self.X_train = X_train
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
-        self._inference()
+        self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
     def Predict(self, X_test):
@@ -149,7 +149,7 @@ class PartialLeastSqaureRegressor(Regressor):
 
     def Fit(self, X_train, Y_train):
         self.regressor.fit(X_train, Y_train)
-        self._inference(X_train, Y_train)
+        self._Inference(X_train, Y_train)
         
         return None, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
@@ -173,7 +173,7 @@ class PrincipalComponentRegressor(Regressor):
         self.pca = PCA(self.n_components)
         self.X_train_transform = self.pca.fit_transform(X_train)
         self.regressor.fit(self.X_train_transform, Y_train)
-        self._inference(self.X_train_transform, Y_train)
+        self._Inference(self.X_train_transform, Y_train)
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train_transform,
                                                                                              Y_train)
 
@@ -215,13 +215,13 @@ class ForwardStepwiseRegressor(Regressor):
         self.selected_X_train = None
 
     def Fit(self, X_train, Y_train, **kwargs):
-        ids = MS.ModelSelection.FowardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+        ids = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                 Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
         print(ids)
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
-        self._inference()
+        self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
             self.regressor.score(self.X_train, self.Y_train), ids
 
@@ -241,7 +241,7 @@ class BackwardStepwiseRegressor(Regressor):
         self.Y_train = Y_train
 
         self.regressor.fit(self.X_train, self.Y_train)
-        self._inference()
+        self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
             self.regressor.score(self.X_train, self.Y_train), ids
 
@@ -258,7 +258,7 @@ class BestsubsetRegressor(Regressor):
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
-        self._inference()
+        self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
                self.regressor.score(self.X_train, self.Y_train), ids
 
@@ -271,7 +271,7 @@ class ForwardStagewiseRegressor(Regressor):
         self.Y_mean = None
 
     @CenteringDecorator('X_train', 'Y_train')
-    @NormalizingDecorator('X_train', 'Y_train')
+    @StandardizingDecorator('X_train', 'Y_train')
     def Fit(self, X_train, Y_train, **kwargs):
         self.X_train = X_train
         self.Y_train = Y_train
@@ -301,7 +301,7 @@ class ForwardStagewiseRegressor(Regressor):
             abs_cors[index] = 0
 
         self.parameters['beta'] = beta
-        self._inference(X_train, Y_train)
+        self._Inference(X_train, Y_train)
 
         return 0, self.parameters['beta'], self.p, self.rsquared
 

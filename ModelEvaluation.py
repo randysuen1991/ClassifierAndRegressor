@@ -48,6 +48,9 @@ class ModelEvaluation:
     def MallowCp(model, var):
         yield (model.sse + 2 * model.x_k * var) / model.n
 
+    def ValidationAccuracy(model):
+        return model.valid_precision
+
     def Rsquared(model):
         return 1 - model.sse / model.sst
 

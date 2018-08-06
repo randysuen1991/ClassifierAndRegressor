@@ -4,6 +4,8 @@ import sys
 import warnings
 import ModelEvaluation as ME
 from itertools import combinations
+import Regressor as R
+import Classifier as C
 
 if 'C:\\Users\\ASUS\\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
@@ -11,7 +13,7 @@ if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.pa
         sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
 if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
-from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
+from DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 
 class VariableSelection:
@@ -98,7 +100,7 @@ class ModelSelection:
         return predictors_candidates[index]
 
     # This function would return a list of indices indicating which predictors we should select.
-    def FowardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
+    def ForwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
         p = kwargs.get('p', X_train.shape[1])
         candidates = list()
         predictors_order = list()
@@ -115,28 +117,36 @@ class ModelSelection:
                 add_model.Fit(X_train=add_predictors, Y_train=Y_train)
                 model_candidates.append((add_model, j))
 
-            rsquareds = [_model.rsquared for _model, _ in model_candidates]
-            index = np.argmax(rsquareds)
+            if isinstance(model_candidates[0][0], R.Regressor):
+                rsquareds = [_model.rsquared for _model, _ in model_candidates]
+                index = np.argmax(rsquareds)
+            elif isinstance(model_candidates[0][0], C.Classifier):
+                valid_precisions = [criteria(_model) for _model, _ in model_candidates]
+                index = np.argmax(valid_precisions)
 
             model_selected, predictor_id = model_candidates[index]
-
             available_predictors.remove(predictor_id)
-
             candidates.append(model_selected)
             predictors_order.append(predictor_id)
             predictors = model_selected.X_train
+
         if criteria is ME.ModelEvaluation.Rsquared or criteria is ME.ModelEvaluation.AdjRsquared:
             numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
+
         elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
                 criteria is ME.ModelEvaluation.MallowCp:
-
             model_full = model()
             model_full.Fit(X_train=X_train, Y_train=Y_train)
             var = model_full.sse / model_full.n
             var = var[0]
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
+
+        elif criteria is ME.ModelEvaluation.ValidationAccuracy:
+            numbers = [criteria(_model) for _model in candidates]
+            index = np.argmax(numbers)
+
         else:
             raise TypeError('Please handle the special criteria.')
 
