@@ -14,7 +14,8 @@ import ModelSelection as MS
 import sys
 if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
-
+if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
+    sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
 from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
 
 """
