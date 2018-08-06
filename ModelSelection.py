@@ -9,6 +9,8 @@ if 'C:\\Users\\ASUS\\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not 
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
 if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
         sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
+if '/home/randy/pycodes/Dimension-Reduction-Approaches' not in sys.path:
+    sys.path.append('/home/randy/pycodes/Dimension-Reduction-Approaches')
 from DimensionReductionApproaches import CenteringDecorator, NormalizingDecorator
 
 
