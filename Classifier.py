@@ -142,8 +142,11 @@ class Classifier:
             label_positive = np.where(Y_train == positive)[0]
             label_negative = np.where(Y_train == negative)[0]
             true_positive = np.intersect1d(pred_positive, label_positive)
+            # print(true_positive)
             false_positive = np.intersect1d(pred_positive, label_negative)
+            # print(false_positive)
             false_negative = np.intersect1d(pred_negative, label_positive)
+            # print(false_negative)
             TP = len(true_positive)
             FP = len(false_positive)
             FN = len(false_negative)
@@ -168,9 +171,7 @@ class Classifier:
         except AttributeError:
             self.classifier.fit(X_train, Y_train.ravel())
         self.valid_accuracy, valid_results, _ = self.Classify(X_valid, Y_valid.ravel())
-
         self.valid_recall, self.valid_precision = self.Evaluate(valid_results)
-
 
 class AdaBoostClassifier(Classifier):
     def __init__(self, **kwargs):
@@ -268,12 +269,12 @@ class ForwardStepwiseClassifier(Classifier):
         self.kwargs = kwargs
 
     def Fit(self, X_train, Y_train):
-        self._Inference(X_train, Y_train)
+
         ids = MS.ModelSelection.ForwardSelection(self.classifier_type, X_train, Y_train,
-                                                 criteria=ME.ModelEvaluation.ValidationAccuracy)
+                                                 criteria=ME.ModelEvaluation.ValidationFBeta)
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
-
+        self._Inference(X_train[:, ids], Y_train)
         try:
             self.classifier.fit(self.X_train, self.Y_train.ravel())
         except AttributeError:
@@ -315,6 +316,8 @@ class BestsubsetClassifier(Classifier):
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.classifier.fit(self.X_train, self.Y_train)
+
+
 
 
 class TwoStepClassifier(Classifier):

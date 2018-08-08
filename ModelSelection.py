@@ -121,8 +121,8 @@ class ModelSelection:
                 rsquareds = [_model.rsquared for _model, _ in model_candidates]
                 index = np.argmax(rsquareds)
             elif isinstance(model_candidates[0][0], C.Classifier):
-                valid_precisions = [criteria(_model) for _model, _ in model_candidates]
-                index = np.argmax(valid_precisions)
+                numbers = [criteria(_model) for _model, _ in model_candidates]
+                index = np.argmax(numbers)
 
             model_selected, predictor_id = model_candidates[index]
             available_predictors.remove(predictor_id)
@@ -146,11 +146,9 @@ class ModelSelection:
         elif criteria is ME.ModelEvaluation.ValidationAccuracy or criteria is ME.ModelEvaluation.ValidationFBeta:
             numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
-
         else:
             raise TypeError('Please handle the special criteria.')
 
-        print(predictors_order[:index+1])
         return predictors_order[:index+1]
 
     def BackwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):

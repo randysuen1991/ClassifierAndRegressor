@@ -49,9 +49,12 @@ class ModelEvaluation:
         yield (model.sse + 2 * model.x_k * var) / model.n
 
     # FBeta is an indicator to evaluate the performance of a model.
-    def ValidationFBeta(model, beta=1):
-        return (1+beta**2) * model.valid_precision * model.valid_recall / \
-               (beta**2 * model.valid_precision + model.valid_recall)
+    def ValidationFBeta(model, beta=0.5):
+        try:
+            return (1+beta**2) * model.valid_precision * model.valid_recall / \
+                   (beta**2 * model.valid_precision + model.valid_recall)
+        except ZeroDivisionError:
+            return 0
 
     def ValidationAccuracy(model):
         return model.valid_accuracy
