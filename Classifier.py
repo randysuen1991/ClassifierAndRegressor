@@ -131,6 +131,29 @@ class Classifier:
             correct_results = np.where(results == Y_test.ravel())[0]
             return len(correct_results) / len(Y_test), results, correct_results
 
+    def Evaluate(self, Y_pred):
+        if len(np.unique(self.Y_train)) == 2:
+            positive = np.unique(self.Y_train)[0]
+            negative = np.unique(self.Y_train)[1]
+            Y_train = self.Y_train.ravel()
+            valid_results = np.array(Y_pred)
+            pred_positive = np.where(valid_results == positive)[0]
+            pred_negative = np.where(valid_results == negative)[0]
+            label_positive = np.where(Y_train == positive)[0]
+            label_negative = np.where(Y_train == negative)[0]
+            true_positive = np.intersect1d(pred_positive, label_positive)
+            false_positive = np.intersect1d(pred_positive, label_negative)
+            false_negative = np.intersect1d(pred_negative, label_positive)
+            TP = len(true_positive)
+            FP = len(false_positive)
+            FN = len(false_negative)
+            P = TP + FN
+            recall = TP / P
+            precision = TP / (TP + FP)
+            return recall, precision
+        else:
+            return None, None
+
     # This function does 1/3-folded cross-validation.
     def _Inference(self, X_train, Y_train):
         n = X_train.shape[0]
@@ -146,27 +169,7 @@ class Classifier:
             self.classifier.fit(X_train, Y_train.ravel())
         self.valid_accuracy, valid_results, _ = self.Classify(X_valid, Y_valid.ravel())
 
-        # If there are only two categories, then we could compute the recall and precision.
-        if len(np.unique(Y_train)) == 2:
-            positive = np.unique(Y_train)[0]
-            negative = np.unique(Y_train)[1]
-            Y_train = Y_train.ravel()
-            valid_results = np.array(valid_results)
-            pred_positive = np.where(valid_results == positive)[0]
-            pred_negative = np.where(valid_results == negative)[0]
-            label_positive = np.where(Y_train == positive)[0]
-            label_negative = np.where(Y_train == negative)[0]
-            true_positive = np.intersect1d(pred_positive, label_positive)
-            true_negative = np.intersect1d(pred_negative, label_negative)
-            false_positive = np.intersect1d(pred_positive, label_negative)
-            false_negative = np.intersect1d(pred_negative, label_positive)
-            self.valid_TP = len(true_positive)
-            self.valid_TN = len(true_negative)
-            self.valid_FP = len(false_positive)
-            self.valid_FN = len(false_negative)
-            P = self.valid_TP + self.valid_FN
-            self.valid_recall = self.valid_TP / P
-            self.valid_precision = self.valid_TP / self.valid_TP + self.valid_FP
+        self.valid_recall, self.valid_precision = self.Evaluate(valid_results)
 
 
 class AdaBoostClassifier(Classifier):
@@ -258,10 +261,11 @@ class LinearDiscriminantClassifier(Classifier):
 
 
 class ForwardStepwiseClassifier(Classifier):
-    def __init__(self, classifier):
+    def __init__(self, classifier, **kwargs):
         super().__init__()
         self.classifier = classifier()
         self.classifier_type = classifier
+        self.kwargs = kwargs
 
     def Fit(self, X_train, Y_train):
         self._Inference(X_train, Y_train)
@@ -279,10 +283,11 @@ class ForwardStepwiseClassifier(Classifier):
 
 
 class BackwardStepwiseClassifier(Classifier):
-    def __init__(self, classifier):
+    def __init__(self, classifier, **kwargs):
         super().__init__()
         self.classifier = classifier()
         self.classifier_type = classifier
+        self.kwargs = kwargs
 
     def Fit(self, X_train, Y_train):
 
@@ -295,6 +300,7 @@ class BackwardStepwiseClassifier(Classifier):
         except AttributeError:
             self.classifier.Fit(self.X_train, self.Y_train)
 
+        return ids
 
 class BestsubsetClassifier(Classifier):
     def __init__(self, classifier):

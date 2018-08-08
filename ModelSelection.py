@@ -143,7 +143,7 @@ class ModelSelection:
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
 
-        elif criteria is ME.ModelEvaluation.ValidationAccuracy:
+        elif criteria is ME.ModelEvaluation.ValidationAccuracy or criteria is ME.ModelEvaluation.ValidationFBeta:
             numbers = [criteria(_model) for _model in candidates]
             index = np.argmax(numbers)
 
