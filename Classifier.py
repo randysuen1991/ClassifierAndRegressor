@@ -117,7 +117,7 @@ class Classifier:
         try:
             results = self.classifier.predict(X_test)
         except AttributeError:
-            results = self.classifier.Classify(X_test)
+            return self.classifier.Classify(X_test, Y_test)
 
         if type(Y_test) != np.ndarray:
             return None, results, None
@@ -196,7 +196,7 @@ class LogisticClassifier(Classifier):
         self.kwargs = kwargs
 
 
-class KnearestNeighborClassifier(Classifier):
+class KNearestNeighborClassifier(Classifier):
     def __init__(self, **kwargs):
         super().__init__()
         self.classifier = KNeighborsClassifier(n_neighbors=kwargs.get('k', 1))
@@ -243,11 +243,12 @@ class ForwardStepwiseClassifier(Classifier):
         self.Y_train = Y_train
 
         try:
-            self.classifier.fit(self.X_train, self.Y_train)
+            self.classifier.fit(self.X_train, self.Y_train.ravel())
         except AttributeError:
             self.classifier.Fit(self.X_train, self.Y_train)
 
         return ids
+
 
 class BackwardStepwiseClassifier(Classifier):
     def __init__(self, classifier):
@@ -265,6 +266,7 @@ class BackwardStepwiseClassifier(Classifier):
             self.classifier.fit(self.X_train, self.Y_train)
         except AttributeError:
             self.classifier.Fit(self.X_train, self.Y_train)
+
 
 class BestsubsetClassifier(Classifier):
     def __init__(self, classifier):
@@ -302,12 +304,14 @@ class TwoStepClassifier(Classifier):
         self.parameters['first_step']['row'] = linear_subspace[0]
         self.parameters['first_step']['column'] = linear_subspace[1]
         
-        X_train_proj = DRA.MultilinearReduction.TensorProject(X_train,self.parameters['first_step']['row'],self.parameters['first_step']['column'])
+        X_train_proj = DRA.MultilinearReduction.TensorProject(X_train, self.parameters['first_step']['row'],
+                                                              self.parameters['first_step']['column'])
         X_train_proj_vec = UF.imgs2vectors(X_train_proj)
         
         self.parameters['second_step'] = self.second_step_function(X_train=X_train,Y_train=Y_train)
         
-        self.transformed_X_train = np.matmul(X_train_proj_vec,self.parameters['second_step'])
+        self.transformed_X_train = np.matmul(X_train_proj_vec,
+                                             self.parameters['second_step'])
         self.Y_train = Y_train
         return self.parameters
     
@@ -315,12 +319,13 @@ class TwoStepClassifier(Classifier):
 
         ratios = []
         for iter in range(dimension):
-            linear_subspace = self.first_step_function(X_train = X_train,input_shape = self.input_shape,p_tilde=iter+1,q_tilde=iter+1)
-            X_train_proj = np.matmul(np.matmul(linear_subspace[0],X_train),linear_subspace[1])
+            linear_subspace = self.first_step_function(X_train=X_train, input_shape=self.input_shape,
+                                                       p_tilde=iter+1, q_tilde=iter+1)
+            X_train_proj = np.matmul(np.matmul(linear_subspace[0], X_train), linear_subspace[1])
             X_train_proj_vec = UF.imgs2vectors(X_train_proj)
-            linear_subspace = self.second_step_function(X_train_proj,Y_train)
-            X_train_proj_vec_proj = np.matmul(X_train_proj_vec,linear_subspace)
-            ratio = self.Compute_Ratio(X_train_proj_vec_proj,Y_train)
+            linear_subspace = self.second_step_function(X_train_proj, Y_train)
+            X_train_proj_vec_proj = np.matmul(X_train_proj_vec, linear_subspace)
+            ratio = self.Compute_Ratio(X_train_proj_vec_proj, Y_train)
             ratios.append(ratio)
         
         ratios = np.round(ratios,6)
@@ -328,24 +333,25 @@ class TwoStepClassifier(Classifier):
         
         return index + 1
 
-    def Classify(self, X_test, Y_test,**kwargs):
-        k = kwargs.get('k',1)
+    def Classify(self, X_test, Y_test, **kwargs):
+        k = kwargs.get('k', 1)
         # Use K-nearest neighbor to classify the testing data
         neighbor = KNeighborsClassifier(n_neighbors=k)
-        neighbor.fit(self.transformed_X_train,self.Y_train.ravel())
+        neighbor.fit(self.transformed_X_train, self.Y_train.ravel())
         
-        X_test_proj = DRA.MultilinearReduction.TensorProject(X_test,self.parameters['first_step']['row'],self.parameters['first_step']['column'])
+        X_test_proj = DRA.MultilinearReduction.TensorProject(X_test, self.parameters['first_step']['row'],
+                                                             self.parameters['first_step']['column'])
         X_test_proj_vec = UF.imgs2vectors(X_test_proj)
-        X_test_proj_vec_proj = np.matmul(X_test_proj_vec,self.parameters['second_step'])
+        X_test_proj_vec_proj = np.matmul(X_test_proj_vec, self.parameters['second_step'])
         results = neighbor.predict(X_test_proj_vec_proj)
         correct_results = np.where(results == Y_test.ravel())[0]
         return len(correct_results) / len(Y_test), correct_results
 
     def Compute_Ratio(self, X_train, Y_train):
         Total_centered = DRA.TotalCentered(X_train)
-        Between_centered = DRA.BetweenGroupMeanCentered(X_train,Y_train)
-        _, S, _ = np.linalg.svd(Total_centered,full_matrices=False)
+        Between_centered = DRA.BetweenGroupMeanCentered(X_train, Y_train)
+        _, S, _ = np.linalg.svd(Total_centered, full_matrices=False)
         denominator = np.sum(S)
-        _, S, _ = np.linalg.svd(Between_centered,full_matrices=False)
+        _, S, _ = np.linalg.svd(Between_centered, full_matrices=False)
         numerator = np.sum(S)
         return numerator/denominator
