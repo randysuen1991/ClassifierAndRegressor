@@ -73,11 +73,17 @@ class Classifier:
     def __init__(self): 
         self.parameters = None
         self.classifier = None
-        self.valid_precision = None
         self.x_k = None
         self.n = None
         self.y_k = None
         self._X_train = None
+        self._Y_train = None
+        self.recall = None
+        self.precision = None
+        self.accuracy = None
+        self.valid_recall = None
+        self.valid_precision = None
+        self.valid_accuracy = None
 
     @property
     def X_train(self):
@@ -138,7 +144,29 @@ class Classifier:
             self.classifier.Fit(X_train, Y_train)
         except AttributeError:
             self.classifier.fit(X_train, Y_train.ravel())
-        self.valid_precision, _, _ = self.Classify(X_valid, Y_valid.ravel())
+        self.valid_accuracy, valid_results, _ = self.Classify(X_valid, Y_valid.ravel())
+
+        # If there are only two categories, then we could compute the recall and precision.
+        if len(np.unique(Y_train)) == 2:
+            positive = np.unique(Y_train)[0]
+            negative = np.unique(Y_train)[1]
+            Y_train = Y_train.ravel()
+            valid_results = np.array(valid_results)
+            pred_positive = np.where(valid_results == positive)[0]
+            pred_negative = np.where(valid_results == negative)[0]
+            label_positive = np.where(Y_train == positive)[0]
+            label_negative = np.where(Y_train == negative)[0]
+            true_positive = np.intersect1d(pred_positive, label_positive)
+            true_negative = np.intersect1d(pred_negative, label_negative)
+            false_positive = np.intersect1d(pred_positive, label_negative)
+            false_negative = np.intersect1d(pred_negative, label_positive)
+            self.valid_TP = len(true_positive)
+            self.valid_TN = len(true_negative)
+            self.valid_FP = len(false_positive)
+            self.valid_FN = len(false_negative)
+            P = self.valid_TP + self.valid_FN
+            self.valid_recall = self.valid_TP / P
+            self.valid_precision = self.valid_TP / self.valid_TP + self.valid_FP
 
 
 class AdaBoostClassifier(Classifier):

@@ -48,8 +48,13 @@ class ModelEvaluation:
     def MallowCp(model, var):
         yield (model.sse + 2 * model.x_k * var) / model.n
 
+    # FBeta is an indicator to evaluate the performance of a model.
+    def ValidationFBeta(model, beta=1):
+        return (1+beta**2) * model.valid_precision * model.valid_recall / \
+               (beta**2 * model.valid_precision + model.valid_recall)
+
     def ValidationAccuracy(model):
-        return model.valid_precision
+        return model.valid_accuracy
 
     def Rsquared(model):
         return 1 - model.sse / model.sst
