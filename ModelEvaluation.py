@@ -1,5 +1,5 @@
 import numpy as np
-
+from functools import wraps
 # The decorated function should either be passed by trained model with a estimated variance or a untrained model with
 # training data. In the former case, it will return a list of values. (To avoid too many predictors, I use generator).
 # In the latter case, it would return a value.
@@ -7,6 +7,7 @@ import numpy as np
 
 def PredictionErrorDecorator(fun):
 
+    @wraps(fun)
     def decofun(model, **kwargs):
         if model.X_train is None:
             X_train = kwargs.get('X_train')

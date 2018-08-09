@@ -74,9 +74,6 @@ class Regressor:
             self.y_k = Y_train.shape[0]
             self._Y_train = self._Y_train.reshape(-1, 1)
 
-
-
-
     def _Inference(self):
 
         # Store some info of the model.
