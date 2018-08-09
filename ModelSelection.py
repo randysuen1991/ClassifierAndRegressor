@@ -76,9 +76,12 @@ class ModelSelection:
                 model_comb.Fit(X_train=X_train[:, comb], Y_train=Y_train)
                 model_candidates.append((model_comb, comb))
 
-            rsquareds = [_model.rsquared for _model, _ in model_candidates]
-
-            index = np.argmax(rsquareds)
+            if isinstance(model_candidates[0][0], R.Regressor):
+                rsquareds = [_model.rsquared for _model, _ in model_candidates]
+                index = np.argmax(rsquareds)
+            elif isinstance(model_candidates[0][0], C.Classifier):
+                numbers = [criteria(_model) for _model, _ in model_candidates]
+                index = np.argmax(numbers)
 
             model_selected, predictor_id = model_candidates[index]
 
