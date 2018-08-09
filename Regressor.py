@@ -10,6 +10,8 @@ import pandas as pd
 from sliced import SlicedInverseRegression
 import ModelEvaluation as ME
 import ModelSelection as MS
+from sklearn.preprocessing import StandardScaler
+
 
 import sys
 if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
@@ -41,6 +43,8 @@ class Regressor:
         # y_k refers to the number of the responses of Y_train
         self.y_k = None
         self.p = None
+        self.standardize = None
+        self.standardizescaler = StandardScaler()
 
     @property
     def X_train(self):
@@ -70,6 +74,9 @@ class Regressor:
             self.y_k = Y_train.shape[0]
             self._Y_train = self._Y_train.reshape(-1, 1)
 
+
+
+
     def _Inference(self):
 
         # Store some info of the model.
@@ -85,17 +92,6 @@ class Regressor:
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
 
-        # a = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train)))) for i in range(len(self.sse_scaled))])
-        # b = np.array([np.diagonal(self.sse_scaled[i] * np.linalg.inv(np.dot(self.X_train.T, self.X_train))) for i in range(len(self.sse_scaled))])
-        # d = np.array([np.sqrt(np.diagonal(np.linalg.inv(np.dot(self.X_train.T, self.X_train))))])
-        # e = np.array([np.diagonal(np.linalg.inv(np.dot(self.X_train.T, self.X_train)))])
-
-        # print('a:', a)
-        # print('b:', b)
-        # print('d:', d)
-        # print('e:', e)
-        # print('sse:', self.sse_scaled)
-        # print('=====')
         self.rsquared = self.regressor.score(self.X_train, self.Y_train)
         self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
 
@@ -113,7 +109,11 @@ class Regressor:
 
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
 
-    def Fit(self, X_train, Y_train):
+    def Fit(self, X_train, Y_train, standardize=False):
+        self.standardize = standardize
+        if self.standardize:
+            X_train = self.standardizescaler.fit_transform(X_train)
+
         self.X_train = X_train
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
@@ -121,6 +121,8 @@ class Regressor:
         return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
     def Predict(self, X_test):
+        if self.standardize:
+            X_test = self.standardizescaler.transform(X_test)
         return self.regressor.predict(X_test)
 
     def RegressionPlot(self, X, Y):
@@ -212,12 +214,13 @@ class ForwardStepwiseRegressor(Regressor):
         super().__init__()
         self.regressor = LinearRegression()
         self.criteria = criteria
-        self.selected_X_train = None
 
-    def Fit(self, X_train, Y_train, **kwargs):
+    def Fit(self, X_train, Y_train, standardize=False, **kwargs):
+        self.standardize = standardize
+        if self.standardize:
+            X_train = self.standardizescaler.fit_transform(X_train)
         ids = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
-                                                Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
-        print(ids)
+                                                 Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
@@ -231,12 +234,10 @@ class BackwardStepwiseRegressor(Regressor):
         super().__init__()
         self.regressor = LinearRegression()
         self.criteria = criteria
-        self.selected_X_train = None
 
     def Fit(self, X_train, Y_train, **kwargs):
         ids = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                   Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
-        print(ids)
         self.X_train = X_train[:, ids]
         self.Y_train = Y_train
 
@@ -265,6 +266,7 @@ class BestsubsetRegressor(Regressor):
 
 # The response should be univariate.
 class ForwardStagewiseRegressor(Regressor):
+
     def __init__(self):
         super().__init__()
         self.X_mean = None

@@ -114,7 +114,7 @@ class ModelSelection:
                     add_predictors = np.concatenate((predictors, tmp), axis=1)
                 except UnboundLocalError:
                     add_predictors = X_train[:, j].reshape(-1, 1)
-                add_model.Fit(X_train=add_predictors, Y_train=Y_train)
+                add_model.Fit(X_train=add_predictors, Y_train=Y_train, standardize=kwargs.get('standardize', False))
                 model_candidates.append((add_model, j))
 
             if isinstance(model_candidates[0][0], R.Regressor):
@@ -137,7 +137,7 @@ class ModelSelection:
         elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
                 criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
-            model_full.Fit(X_train=X_train, Y_train=Y_train)
+            model_full.Fit(X_train=X_train, Y_train=Y_train, standardize=kwargs.get('standardize', False))
             var = model_full.sse / model_full.n
             var = var[0]
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
@@ -162,7 +162,7 @@ class ModelSelection:
         # this list stores the index of the predictors which are ok to be deleted.
         available_predictors = list(range(p))
         model_full = model()
-        model_full.Fit(X_train=X_train, Y_train=Y_train)
+        model_full.Fit(X_train=X_train, Y_train=Y_train, standardize=kwargs.get('standardize', False))
         candidates.append(model_full)
         for i in range(p-1):
             model_candidates = list()
@@ -173,8 +173,13 @@ class ModelSelection:
                 sub_model.Fit(X_train=sub_predictors, Y_train=Y_train)
                 model_candidates.append((sub_model, k))
 
-            rsquareds = [_model.rsquared for _model, _ in model_candidates]
-            index = np.argmax(rsquareds)
+            if isinstance(model_candidates[0][0], R.Regressor):
+                rsquareds = [_model.rsquared for _model, _ in model_candidates]
+                index = np.argmax(rsquareds)
+            elif isinstance(model_candidates[0][0], C.Classifier):
+                numbers = [criteria(_model) for _model, _ in model_candidates]
+                index = np.argmax(numbers)
+
             model_selected, predictor_id = model_candidates[index]
 
             available_predictors.remove(predictor_id)
@@ -187,7 +192,7 @@ class ModelSelection:
         elif criteria is ME.ModelEvaluation.AIC or criteria is ME.ModelEvaluation.BIC or \
                 criteria is ME.ModelEvaluation.MallowCp:
             model_full = model()
-            model_full.Fit(X_train=X_train, Y_train=Y_train)
+            model_full.Fit(X_train=X_train, Y_train=Y_train, standardize=kwargs.get('standardize', False))
             var = model_full.sse / model_full.n
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
