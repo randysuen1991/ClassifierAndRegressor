@@ -155,7 +155,10 @@ class ModelSelection:
         p = kwargs.get('p', X_train.shape[1])
         X_train = X_train[:, :p]
         if X_train.shape[1] > X_train.shape[0]:
-            raise ValueError('The number of predictors should not be larger the one of the sample size.')
+            tmp_model = model()
+            if isinstance(tmp_model, R.Regressor):
+                raise ValueError('The number of predictors should not be larger the one of the sample size.')
+            del tmp_model
 
         candidates = list()
         predictors_order = list()
