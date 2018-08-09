@@ -221,7 +221,8 @@ class ForwardStepwiseRegressor(Regressor):
             X_train = self.standardizescaler.fit_transform(X_train)
         ids = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                  Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
-        self.X_train = X_train[:, ids]
+
+        self.X_train = self.standardizescaler.fit_transform(X_train[:, ids])
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
         self._Inference()
@@ -235,10 +236,14 @@ class BackwardStepwiseRegressor(Regressor):
         self.regressor = LinearRegression()
         self.criteria = criteria
 
-    def Fit(self, X_train, Y_train, **kwargs):
+    def Fit(self, X_train, Y_train, standardize=False, **kwargs):
+        self.standardize = standardize
+        if self.standardize:
+            X_train = self.standardizescaler.fit_transform(X_train)
         ids = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
                                                   Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
-        self.X_train = X_train[:, ids]
+
+        self.X_train = self.standardizescaler.fit_transform(X_train[:, ids])
         self.Y_train = Y_train
 
         self.regressor.fit(self.X_train, self.Y_train)

@@ -1,11 +1,12 @@
 import sys
 
-if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' or 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path :
+if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' or \
+        'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
 
-if '/home/randy/Documents/pycodes/Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('/home/randy/Documents/pycodes/Dimension-Reduction-Approaches')
+if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
+    sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
 
 import UtilFun as UF
 import numpy as np
