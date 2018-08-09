@@ -114,7 +114,7 @@ class Classifier:
             self.y_k = Y_train.shape[0]
             self._Y_train = self._Y_train.reshape(-1, 1)
 
-    def Fit(self, X_train, Y_train):
+    def Fit(self, X_train, Y_train, **kwargs):
         self.X_train = X_train
         self.Y_train = Y_train
         self._Inference(X_train, Y_train)
