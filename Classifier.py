@@ -142,17 +142,17 @@ class Classifier:
             label_positive = np.where(Y_train == positive)[0]
             label_negative = np.where(Y_train == negative)[0]
             true_positive = np.intersect1d(pred_positive, label_positive)
-            # print(true_positive)
             false_positive = np.intersect1d(pred_positive, label_negative)
-            # print(false_positive)
             false_negative = np.intersect1d(pred_negative, label_positive)
-            # print(false_negative)
             TP = len(true_positive)
             FP = len(false_positive)
             FN = len(false_negative)
             P = TP + FN
             recall = TP / P
-            precision = TP / (TP + FP)
+            try:
+                precision = TP / (TP + FP)
+            except ZeroDivisionError:
+                precision = 0
             return recall, precision
         else:
             return None, None
