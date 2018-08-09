@@ -98,6 +98,9 @@ class ModelSelection:
             var = model_full.sse / model_full.n
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
+        elif criteria is ME.ModelEvaluation.ValidationAccuracy or criteria is ME.ModelEvaluation.ValidationFBeta:
+            numbers = [criteria(_model) for _model in candidates]
+            index = np.argmax(numbers)
         else:
             raise TypeError('Please handle the special criteria.')
         return predictors_candidates[index]
@@ -202,6 +205,9 @@ class ModelSelection:
             var = model_full.sse / model_full.n
             numbers = [list(criteria(_model, var=var))[0] for _model in candidates]
             index = np.argmin(numbers)
+        elif criteria is ME.ModelEvaluation.ValidationAccuracy or criteria is ME.ModelEvaluation.ValidationFBeta:
+            numbers = [criteria(_model) for _model in candidates]
+            index = np.argmax(numbers)
         else:
             raise TypeError('Please handle the special criteria.')
         predictors = list(range(p))
