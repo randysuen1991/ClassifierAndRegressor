@@ -135,7 +135,11 @@ class Regressor:
         plt.title('Scatter Plot and Regression')
 
     def Get_Score(self, X_test, Y_test):
-        return self.regressor.score(X_test, Y_test)
+        try:
+            return self.regressor.score(X_test, Y_test)
+        except AttributeError:
+            return self.regressor.Get_Score(X_test, Y_test)
+
 
 class OrdinaryLeastSquaredRegressor(Regressor):
     def __init__(self):
