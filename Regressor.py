@@ -134,6 +134,8 @@ class Regressor:
                    loc='best')
         plt.title('Scatter Plot and Regression')
 
+    def Get_Score(self, X_test, Y_test):
+        return self.regressor.score(X_test, Y_test)
 
 class OrdinaryLeastSquaredRegressor(Regressor):
     def __init__(self):
