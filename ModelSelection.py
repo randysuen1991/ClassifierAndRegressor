@@ -6,6 +6,8 @@ import ModelEvaluation as ME
 from itertools import combinations
 import Regressor as R
 import Classifier as C
+from sklearn.preprocessing import StandardScaler
+
 
 if 'C:\\Users\\ASUS\\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
@@ -108,6 +110,9 @@ class ModelSelection:
     # This function would return a list of indices indicating which predictors we should select.
     def ForwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
         p = kwargs.get('p', X_train.shape[1])
+        if kwargs.get('standardize', False):
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
         candidates = list()
         predictors_order = list()
         available_predictors = list(range(p))

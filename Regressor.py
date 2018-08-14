@@ -11,6 +11,7 @@ from sliced import SlicedInverseRegression
 import ModelEvaluation as ME
 import ModelSelection as MS
 from sklearn.preprocessing import StandardScaler
+from yellowbrick.regressor import ResidualsPlot
 
 
 import sys
@@ -45,6 +46,7 @@ class Regressor:
         self.p = None
         self.standardize = None
         self.standardizescaler = StandardScaler()
+        self.residual_visualizer = None
 
     @property
     def X_train(self):
@@ -109,7 +111,8 @@ class Regressor:
     def Fit(self, X_train, Y_train, standardize=False):
         self.standardize = standardize
         if self.standardize:
-            X_train = self.standardizescaler.fit_transform(X_train)
+            self.standardizescaler.fit(X_train)
+            X_train = self.standardizescaler.transform(X_train)
 
         self.X_train = X_train
         self.Y_train = Y_train
@@ -122,7 +125,7 @@ class Regressor:
             X_test = self.standardizescaler.transform(X_test)
         return self.regressor.predict(X_test)
 
-    def RegressionPlot(self, X, Y):
+    def Regression_Plot(self, X, Y):
         scatter = plt.scatter(X, Y, color='b')
         line = plt.plot(X, self.regressor.predict(X), color='r')
         plt.ylabel('response')
@@ -134,7 +137,22 @@ class Regressor:
                    loc='best')
         plt.title('Scatter Plot and Regression')
 
+    def Residual_Plot(self, X_test=None, Y_test=None):
+        if self.standardize:
+            print(X_test[0, :])
+            print(self.standardizescaler.mean_)
+            X_test = self.standardizescaler.transform(X_test)
+            print(X_test[0, :])
+
+        self.residual_visualizer = ResidualsPlot(self.regressor)
+        self.residual_visualizer.fit(self.X_train, self.Y_train)
+        if X_test is not None and Y_test is not None:
+            self.residual_visualizer.score(X_test, Y_test)
+        self.residual_visualizer.poof()
+
     def Get_Score(self, X_test, Y_test):
+        if self.standardize:
+            X_test = self.standardizescaler.transform(X_test)
         try:
             return self.regressor.score(X_test, Y_test)
         except AttributeError:
@@ -217,20 +235,24 @@ class ForwardStepwiseRegressor(Regressor):
         super().__init__()
         self.regressor = LinearRegression()
         self.criteria = criteria
+        self.pred_ind = None
 
     def Fit(self, X_train, Y_train, standardize=False, **kwargs):
         self.standardize = standardize
+        self.pred_ind = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+                                                           Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]),
+                                                           standardize=self.standardize)
         if self.standardize:
-            X_train = self.standardizescaler.fit_transform(X_train)
-        ids = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
-                                                 Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
+            self.standardizescaler.fit(X_train[:, self.pred_ind])
+            self.X_train = self.standardizescaler.transform(X_train[:, self.pred_ind])
+        else:
+            self.X_train = X_train[:, self.pred_ind]
 
-        self.X_train = self.standardizescaler.fit_transform(X_train[:, ids])
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
         self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
-            self.regressor.score(self.X_train, self.Y_train), ids
+            self.regressor.score(self.X_train, self.Y_train), self.pred_ind
 
 
 class BackwardStepwiseRegressor(Regressor):
