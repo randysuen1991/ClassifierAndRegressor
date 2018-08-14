@@ -260,21 +260,24 @@ class BackwardStepwiseRegressor(Regressor):
         super().__init__()
         self.regressor = LinearRegression()
         self.criteria = criteria
+        self.pred_ind = None
 
     def Fit(self, X_train, Y_train, standardize=False, **kwargs):
         self.standardize = standardize
+        self.pred_ind = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+                                                            Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]),
+                                                            standardize=self.standardize)
         if self.standardize:
-            X_train = self.standardizescaler.fit_transform(X_train)
-        ids = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
-                                                  Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]))
+            self.X_train = self.standardizescaler.fit_transform(X_train[:, self.pred_ind])
+        else:
+            self.X_train = X_train[:, self.pred_ind]
 
-        self.X_train = self.standardizescaler.fit_transform(X_train[:, ids])
         self.Y_train = Y_train
 
         self.regressor.fit(self.X_train, self.Y_train)
         self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
-            self.regressor.score(self.X_train, self.Y_train), ids
+            self.regressor.score(self.X_train, self.Y_train), self.pred_ind
 
 
 class BestsubsetRegressor(Regressor):
