@@ -79,6 +79,13 @@ class Regressor:
 
     def _Inference(self):
 
+        try:
+            self.rsquared = self.regressor.score(self.X_train, self.Y_train)
+        except AttributeError:
+            self.rsquared = self.regressor.regressor.score(self.X_train, self.Y_train)
+
+        self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
+
         # Store some info of the model.
         self.sst = np.sum((self.Y_train-np.mean(self.Y_train, axis=0))**2, axis=0)
 
@@ -93,18 +100,13 @@ class Regressor:
             self.sse_scaled = [self.sse_scaled]
 
         try:
-            self.rsquared = self.regressor.score(self.X_train, self.Y_train)
-        except AttributeError:
-            self.rsquared = self.regressor.regressor.score(self.X_train, self.Y_train)
-
-        self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
-
-        try:
             centered_X_train = self.X_train - np.mean(self.X_train, axis=0)
             self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] *
                                                     np.linalg.inv(np.dot(centered_X_train.T, centered_X_train))))
                                 for i in range(len(self.sse_scaled))])
         except np.linalg.linalg.LinAlgError:
+            return
+        except TypeError:
             return
         try:
             self.t = self.regressor.coef_ / self.se
@@ -187,7 +189,9 @@ class PartialLeastSqaureRegressor(Regressor):
 
     def Fit(self, X_train, Y_train):
         self.regressor.fit(X_train, Y_train)
-        self._Inference(X_train, Y_train)
+        self.Y_train = Y_train
+        self.X_train = X_train
+        self._Inference()
         
         return None, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
 
@@ -236,8 +240,35 @@ class RandForestRegressor(Regressor):
     def __init__(self):
         super().__init__()
         self.regressor = RandomForestRegressor()
-        
-        
+
+    def Fit(self, X_train, Y_train, standardize=False):
+        self.standardize = standardize
+        if self.standardize:
+            self.standardizescaler.fit(X_train)
+            X_train = self.standardizescaler.transform(X_train)
+
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.regressor.fit(self.X_train, self.Y_train)
+        self._Inference()
+        return self.rsquared
+
+    def Residual_Plot(self, X_test=None, Y_test=None):
+        if self.standardize:
+            X_test = self.standardizescaler.transform(X_test)
+        try:
+            self.residual_visualizer = ResidualsPlot(self.regressor)
+        except yellowbrick.exceptions.YellowbrickTypeError:
+            self.residual_visualizer = ResidualsPlot(self.regressor.regressor)
+
+        Y_train = self.Y_train.ravel()
+        self.residual_visualizer.fit(self.X_train, Y_train)
+        if X_test is not None and Y_test is not None:
+            Y_test = Y_test.ravel()
+            self.residual_visualizer.score(X_test, Y_test)
+        self.residual_visualizer.poof()
+
+
 class SlicedInverseRegressor(Regressor):
     def __init__(self):
         super().__init__()
