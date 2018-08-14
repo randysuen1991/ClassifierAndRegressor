@@ -12,6 +12,7 @@ import ModelEvaluation as ME
 import ModelSelection as MS
 from sklearn.preprocessing import StandardScaler
 from yellowbrick.regressor import ResidualsPlot
+import yellowbrick
 
 
 import sys
@@ -91,7 +92,11 @@ class Regressor:
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
 
-        self.rsquared = self.regressor.score(self.X_train, self.Y_train)
+        try:
+            self.rsquared = self.regressor.score(self.X_train, self.Y_train)
+        except AttributeError:
+            self.rsquared = self.regressor.regressor.score(self.X_train, self.Y_train)
+
         self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
 
         try:
@@ -104,8 +109,10 @@ class Regressor:
         try:
             self.t = self.regressor.coef_ / self.se
         except AttributeError:
-            self.t = self.parameters['beta'] / self.se
-
+            try:
+                self.t = self.parameters['beta'] / self.se
+            except KeyError:
+                return
         self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
 
     def Fit(self, X_train, Y_train, standardize=False):
@@ -127,7 +134,8 @@ class Regressor:
             return self.regressor.predict(X_test)
         except AttributeError:
             return self.regressor.Predict(X_test=X_test)
-        
+
+
     def Regression_Plot(self, X_test, Y_test):
         scatter = plt.scatter(X_test, Y_test, color='b')
         try:
@@ -147,8 +155,11 @@ class Regressor:
     def Residual_Plot(self, X_test=None, Y_test=None):
         if self.standardize:
             X_test = self.standardizescaler.transform(X_test)
+        try:
+            self.residual_visualizer = ResidualsPlot(self.regressor)
+        except yellowbrick.exceptions.YellowbrickTypeError:
+            self.residual_visualizer = ResidualsPlot(self.regressor.regressor)
 
-        self.residual_visualizer = ResidualsPlot(self.regressor)
         self.residual_visualizer.fit(self.X_train, self.Y_train)
         if X_test is not None and Y_test is not None:
             self.residual_visualizer.score(X_test, Y_test)
@@ -194,19 +205,24 @@ class PrincipalComponentRegressor(Regressor):
         self.n_components = n_components
         self.regressor = LinearRegression()
         self.pca = None
-        self.X_train_transform = None
 
-    def Fit(self, X_train, Y_train):
+    def Fit(self, X_train, Y_train, standardize=False):
         self.pca = PCA(self.n_components)
-        self.X_train_transform = self.pca.fit_transform(X_train)
-        self.regressor.fit(self.X_train_transform, Y_train)
-        self._Inference(self.X_train_transform, Y_train)
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train_transform,
-                                                                                             Y_train)
+        self.X_train = self.pca.fit_transform(X_train)
+        self.Y_train = Y_train
+        self.regressor.fit(self.X_train, self.Y_train)
+        self._Inference()
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(self.X_train, Y_train)
 
     def Predict(self, X_test):
-        X_test_transform = self.pca.transform(X_test)
-        prediction = self.regressor.Predict(X_test_transform)
+        try:
+            X_test_transform = self.pca.transform(X_test)
+        except ValueError:
+            X_test_transform = X_test
+        try:
+            prediction = self.regressor.Predict(X_test_transform)
+        except AttributeError:
+            prediction = self.regressor.predict(X_test_transform)
         return prediction
 
 
@@ -261,8 +277,12 @@ class ForwardStepwiseRegressor(Regressor):
             self.regressor.Fit(self.X_train, self.Y_train)
 
         self._Inference()
-        return self.regressor.intercept_, self.regressor.coef_, self.p, \
-            self.regressor.score(self.X_train, self.Y_train), self.pred_ind
+        try:
+            return self.regressor.intercept_, self.regressor.coef_, self.p, \
+                self.regressor.score(self.X_train, self.Y_train), self.pred_ind
+        except AttributeError:
+            return self.regressor.regressor.intercept_, self.regressor.regressor.coef_, self.p, \
+                   self.regressor.regressor.score(self.X_train, self.Y_train), self.pred_ind
 
 
 class BackwardStepwiseRegressor(Regressor):
