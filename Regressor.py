@@ -123,26 +123,30 @@ class Regressor:
     def Predict(self, X_test):
         if self.standardize:
             X_test = self.standardizescaler.transform(X_test)
-        return self.regressor.predict(X_test)
-
-    def Regression_Plot(self, X, Y):
-        scatter = plt.scatter(X, Y, color='b')
-        line = plt.plot(X, self.regressor.predict(X), color='r')
+        try:
+            return self.regressor.predict(X_test)
+        except AttributeError:
+            return self.regressor.Predict(X_test=X_test)
+        
+    def Regression_Plot(self, X_test, Y_test):
+        scatter = plt.scatter(X_test, Y_test, color='b')
+        try:
+            line = plt.plot(X_test, self.regressor.predict(X_test), color='r')
+        except AttributeError:
+            line = plt.plot(X_test, self.regressor.Predict(X_test), color='r')
         plt.ylabel('response')
         plt.xlabel('explanatory')
         plt.legend(handles=[scatter, line[0], ],
-                   labels=['Scatter Plot', 'Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,
-                                                                                          self.regressor.coef_,
-                                                                                          self.regressor.score(X, Y))],
+                   labels=['Scatter Plot',
+                           'Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,
+                                                                          self.regressor.coef_,
+                                                                          self.regressor.score(X_test, Y_test))],
                    loc='best')
         plt.title('Scatter Plot and Regression')
 
     def Residual_Plot(self, X_test=None, Y_test=None):
         if self.standardize:
-            print(X_test[0, :])
-            print(self.standardizescaler.mean_)
             X_test = self.standardizescaler.transform(X_test)
-            print(X_test[0, :])
 
         self.residual_visualizer = ResidualsPlot(self.regressor)
         self.residual_visualizer.fit(self.X_train, self.Y_train)
@@ -231,15 +235,16 @@ class LeastAngleRegressor(Regressor):
 
 
 class ForwardStepwiseRegressor(Regressor):
-    def __init__(self, criteria=ME.ModelEvaluation.AIC):
+    def __init__(self, regressor=OrdinaryLeastSquaredRegressor, criteria=ME.ModelEvaluation.AIC):
         super().__init__()
-        self.regressor = LinearRegression()
+        self.regressor_type = regressor
+        self.regressor = regressor()
         self.criteria = criteria
         self.pred_ind = None
 
     def Fit(self, X_train, Y_train, standardize=False, **kwargs):
         self.standardize = standardize
-        self.pred_ind = MS.ModelSelection.ForwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+        self.pred_ind = MS.ModelSelection.ForwardSelection(model=self.regressor_type, X_train=X_train,
                                                            Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]),
                                                            standardize=self.standardize)
         if self.standardize:
@@ -249,22 +254,28 @@ class ForwardStepwiseRegressor(Regressor):
             self.X_train = X_train[:, self.pred_ind]
 
         self.Y_train = Y_train
-        self.regressor.fit(self.X_train, self.Y_train)
+
+        try:
+            self.regressor.fit(self.X_train, self.Y_train)
+        except AttributeError:
+            self.regressor.Fit(self.X_train, self.Y_train)
+
         self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \
             self.regressor.score(self.X_train, self.Y_train), self.pred_ind
 
 
 class BackwardStepwiseRegressor(Regressor):
-    def __init__(self, criteria=ME.ModelEvaluation.AIC):
+    def __init__(self, regressor=OrdinaryLeastSquaredRegressor, criteria=ME.ModelEvaluation.AIC):
         super().__init__()
-        self.regressor = LinearRegression()
+        self.regressor_type = regressor
+        self.regressor = regressor()
         self.criteria = criteria
         self.pred_ind = None
 
     def Fit(self, X_train, Y_train, standardize=False, **kwargs):
         self.standardize = standardize
-        self.pred_ind = MS.ModelSelection.BackwardSelection(model=OrdinaryLeastSquaredRegressor, X_train=X_train,
+        self.pred_ind = MS.ModelSelection.BackwardSelection(model=self.regressor_type, X_train=X_train,
                                                             Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]),
                                                             standardize=self.standardize)
         if self.standardize:
@@ -273,7 +284,6 @@ class BackwardStepwiseRegressor(Regressor):
             self.X_train = X_train[:, self.pred_ind]
 
         self.Y_train = Y_train
-
         self.regressor.fit(self.X_train, self.Y_train)
         self._Inference()
         return self.regressor.intercept_, self.regressor.coef_, self.p, \

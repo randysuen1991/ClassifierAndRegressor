@@ -125,7 +125,12 @@ class ModelSelection:
                     add_predictors = np.concatenate((predictors, tmp), axis=1)
                 except UnboundLocalError:
                     add_predictors = X_train[:, j].reshape(-1, 1)
-                add_model.Fit(X_train=add_predictors, Y_train=Y_train, standardize=kwargs.get('standardize', False))
+
+                try:
+                    add_model.Fit(X_train=add_predictors, Y_train=Y_train)
+                except AttributeError:
+                    add_model.fit(add_predictors, Y_train)
+
                 model_candidates.append((add_model, j))
 
             if isinstance(model_candidates[0][0], R.Regressor):
