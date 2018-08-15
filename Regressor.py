@@ -268,6 +268,13 @@ class RandForestRegressor(Regressor):
             self.residual_visualizer.score(X_test, Y_test)
         self.residual_visualizer.poof()
 
+    def Predict(self, X_test):
+        if self.standardize:
+            X_test = self.standardizescaler.transform(X_test)
+        try:
+            return self.regressor.predict(X_test).reshape(-1, 1)
+        except AttributeError:
+            return self.regressor.Predict(X_test=X_test).reshape(-1, 1)
 
 class SlicedInverseRegressor(Regressor):
     def __init__(self):
