@@ -229,6 +229,23 @@ class PrincipalComponentRegressor(Regressor):
             prediction = self.regressor.predict(X_test_transform)
         return prediction
 
+    def Residual_Plot(self, X_test=None, Y_test=None):
+        if self.standardize:
+            X_test = self.standardizescaler.transform(X_test)
+        try:
+            self.residual_visualizer = ResidualsPlot(self.regressor)
+        except yellowbrick.exceptions.YellowbrickTypeError:
+            self.residual_visualizer = ResidualsPlot(self.regressor.regressor)
+
+        self.residual_visualizer.fit(self.X_train, self.Y_train)
+        if X_test is not None and Y_test is not None:
+            try:
+                self.residual_visualizer.score(X_test, Y_test)
+            except ValueError:
+                X_test = self.pca.transform(X_test)
+                self.residual_visualizer.score(X_test, Y_test)
+        self.residual_visualizer.poof()
+
 
 class RidgeRegressor(Regressor):
     def __init__(self, alpha):
@@ -249,7 +266,7 @@ class RandForestRegressor(Regressor):
 
         self.X_train = X_train
         self.Y_train = Y_train
-        self.regressor.fit(self.X_train, self.Y_train)
+        self.regressor.fit(self.X_train, self.Y_train.ravel())
         self._Inference()
         return self.rsquared
 
@@ -276,6 +293,7 @@ class RandForestRegressor(Regressor):
         except AttributeError:
             return self.regressor.Predict(X_test=X_test).reshape(-1, 1)
 
+
 class SlicedInverseRegressor(Regressor):
     def __init__(self):
         super().__init__()
@@ -298,6 +316,7 @@ class ForwardStepwiseRegressor(Regressor):
 
     def Fit(self, X_train, Y_train, standardize=False, **kwargs):
         self.standardize = standardize
+
         self.pred_ind = MS.ModelSelection.ForwardSelection(model=self.regressor_type, X_train=X_train,
                                                            Y_train=Y_train, p=kwargs.get('p', X_train.shape[1]),
                                                            standardize=self.standardize)

@@ -37,19 +37,23 @@ def PredictionErrorDecorator(fun):
 
 class ModelEvaluation:
 
+    @staticmethod
     @PredictionErrorDecorator
     def AIC(model, var):
         yield (model.sse + 2 * model.x_k * var) / model.n * var
 
+    @staticmethod
     @PredictionErrorDecorator
     def BIC(model, var):
         yield (model.sse + np.log(model.n) * model.x_k * var) / model.n
 
+    @staticmethod
     @PredictionErrorDecorator
     def MallowCp(model, var):
         yield (model.sse + 2 * model.x_k * var) / model.n
 
     # FBeta is an indicator to evaluate the performance of a model.
+    @staticmethod
     def ValidationFBeta(model, beta=0.5):
         try:
             return (1+beta**2) * model.valid_precision * model.valid_recall / \
@@ -57,11 +61,14 @@ class ModelEvaluation:
         except ZeroDivisionError:
             return 0
 
+    @staticmethod
     def ValidationAccuracy(model):
         return model.valid_accuracy
 
+    @staticmethod
     def Rsquared(model):
         return 1 - model.sse / model.sst
 
+    @staticmethod
     def AdjRsquared(model):
         return 1 - (1-model.rsquared) * (model.n - 1) / (model.n - model.x_k - 1)

@@ -64,6 +64,7 @@ class VariableSelection:
 
 class ModelSelection:
 
+    @staticmethod
     def BestSubsetSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         warnings.warn('Please notice that when the number of predictors are too large, the'
                       'best subset selection would be quite time-consuming.')
@@ -108,8 +109,11 @@ class ModelSelection:
         return predictors_candidates[index]
 
     # This function would return a list of indices indicating which predictors we should select.
+    @staticmethod
     def ForwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
         p = kwargs.get('p', X_train.shape[1])
+        if p > X_train.shape[0]:
+            p = X_train.shape[0]
         if kwargs.get('standardize', False):
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
@@ -167,6 +171,7 @@ class ModelSelection:
 
         return predictors_order[:index+1]
 
+    @staticmethod
     def BackwardSelection(model, X_train, Y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         p = kwargs.get('p', X_train.shape[1])
         X_train = X_train[:, :p]
