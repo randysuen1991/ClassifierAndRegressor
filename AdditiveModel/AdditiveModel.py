@@ -2,11 +2,21 @@ import numpy as np
 import copy as cp
 
 
-class CoreFun:
+class AdditiveModel:
+    def __init__(self, smoother, smoother_factor):
+        self.smoother = smoother
+        self.smoother_factor = smoother_factor
+        self.alpha = None
+        self.smoothers = None
+
+    def fit(self, x_train, y_train):
+        self.alpha, self.smoothers = self.backfitting(x_train=x_train, y_train=y_train, smoother=self.smoother,
+                                                      smooth_factor=self.smoother_factor)
+
     @classmethod
-    def backfitting(cls, x_train, y_train, smoother, threshold=0.1):
+    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.1):
         alpha = np.mean(y_train)
-        smoothers = [smoother() for _ in range(x_train.shape[1])]
+        smoothers = [smoother(smooth_factor=smooth_factor) for _ in range(x_train.shape[1])]
         first = True
         while True:
             for i in range(x_train.shape[1]):
@@ -22,7 +32,7 @@ class CoreFun:
 
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
-                    return smoothers
+                    return alpha, smoothers
 
             smoothers_old = cp.deepcopy(smoothers)
             first = False
