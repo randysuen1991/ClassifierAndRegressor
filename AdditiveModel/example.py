@@ -1,6 +1,7 @@
 import numpy as np
-import AdditiveModel as AM
-
+# from . import AdditiveModel as AM
+# from .. import Regressor
+from ClassifierAndRegressor.AdditiveModel import AdditiveModel as AM
 
 def example1():
     model = AM.AdditiveModel()
