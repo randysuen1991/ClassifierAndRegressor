@@ -13,6 +13,12 @@ class AdditiveModel:
         self.alpha, self.smoothers = self.backfitting(x_train=x_train, y_train=y_train, smoother=self.smoother,
                                                       smooth_factor=self.smoother_factor)
 
+    def predict(self, x_test):
+        results = self.alpha
+        for smoother in self.smoothers:
+            results += smoother(x_test)
+        return results
+
     @classmethod
     def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.1):
         alpha = np.mean(y_train)
