@@ -230,5 +230,4 @@ class ModelSelection:
         to_remove = predictors_order[:index]
         for predictor in to_remove:
             predictors.remove(predictor)
-        print(predictors)
         return predictors

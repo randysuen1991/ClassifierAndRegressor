@@ -26,7 +26,7 @@ from DimensionReductionApproaches import CenteringDecorator, StandardizingDecora
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
 """
 
-# There should be stagewise and stepwise regressor.
+# There should be stagewise.
 
 
 class Regressor:
@@ -122,7 +122,8 @@ class Regressor:
         if self.standardize:
             self.standardizescaler.fit(X_train)
             X_train = self.standardizescaler.transform(X_train)
-
+        plt.plot(X_train, Y_train)
+        plt.show()
         self.X_train = X_train
         self.Y_train = Y_train
         self.regressor.fit(self.X_train, self.Y_train)
