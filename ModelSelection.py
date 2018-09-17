@@ -1,21 +1,12 @@
 import numpy as np
-import pandas as pd
 import sys
 import warnings
-import ModelEvaluation as ME
 from itertools import combinations
-import Regressor as R
-import Classifier as C
 from sklearn.preprocessing import StandardScaler
-
-
-if 'C:\\Users\\ASUS\\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
-if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
-        sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
-if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
-from DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from ClassifierAndRegressor import ModelEvaluation as ME
+from ClassifierAndRegressor import Regressor as R
+from ClassifierAndRegressor import Classifier as C
+from DimensionReductionApproaches.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 
 class VariableSelection:

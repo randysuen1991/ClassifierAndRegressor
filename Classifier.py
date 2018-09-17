@@ -1,14 +1,4 @@
-import sys
-
-if 'C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches' or \
-        'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
-    sys.path.append('C:\\Users\\ASUS\Dropbox\\pycode\\mine\\Dimension-Reduction-Approaches')
-
-if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
-
-import UtilFun as UF
+from DimensionReductionApproaches import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -20,16 +10,14 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier as DTC
 from sklearn.linear_model import LogisticRegression
 import DimensionReductionApproaches as DRA
-import warnings
-import ModelSelection as MS
-import ModelEvaluation as ME
+from ClassifierAndRegressor import ModelEvaluation as ME
+from ClassifierAndRegressor import ModelSelection as MS
 
 
 # This decorator would identify the classifier. This should decorate the Fit function of the 
 # Classifier. 
 def ClassifierDecorator():
     def decofun():
-        
         return None
     
     return decofun
@@ -43,7 +31,6 @@ def ClassifierDecorator():
 # I also should have written a decorator for 'self.Classsify'. Since sometimes we don't have the labels of testing data.
 
 # This is a failure decorator. I want to use it to decorate a class function, but it will miss 'self' argument.
-
 
 class ClassifyDeco():
     def __init__(self, f):

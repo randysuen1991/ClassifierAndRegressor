@@ -6,21 +6,13 @@ from scipy import stats
 import statsmodels.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 from sliced import SlicedInverseRegression
-import ModelEvaluation as ME
-import ModelSelection as MS
+from ClassifierAndRegressor import ModelEvaluation as ME
+from ClassifierAndRegressor import ModelSelection as MS
 from sklearn.preprocessing import StandardScaler
 from yellowbrick.regressor import ResidualsPlot
 import yellowbrick
-
-
-import sys
-if 'C:\\Users\\randysuen\\pycodes\\DimensionReductionApproaches' not in sys.path:
-    sys.path.append('C:\\Users\\randysuen\\pycodes\\DimensionReductionApproaches')
-if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
-from DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from DimensionReductionApproaches.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 """
 Notice: I should add , PIRE(partial inverse regression), decision tree, ...regressions to this file.
