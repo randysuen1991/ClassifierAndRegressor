@@ -16,8 +16,8 @@ import yellowbrick
 
 
 import sys
-if 'C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches' not in sys.path:
-    sys.path.append('C:\\Users\\randysuen\\pycodes\\Dimension-Reduction-Approaches')
+if 'C:\\Users\\randysuen\\pycodes\\DimensionReductionApproaches' not in sys.path:
+    sys.path.append('C:\\Users\\randysuen\\pycodes\\DimensionReductionApproaches')
 if '/home/randysuen/pycodes/Dimension-Reduction-Approaches' not in sys.path:
     sys.path.append('/home/randysuen/pycodes/Dimension-Reduction-Approaches')
 from DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
