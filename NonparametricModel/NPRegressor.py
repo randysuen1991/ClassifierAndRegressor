@@ -1,12 +1,9 @@
 import numpy as np
-import sys
-if 'C:\\Users\\randysuen\\pycodes\\Classifier-and-Regressor' not in sys.path:
-    sys.path.append('C:\\Users\\randysuen\\pycodes\\Classifier-and-Regressor')
-import Regressor as R
+from ClassifierAndRegressor.ParametricModel import PRegressor as PR
 from scipy.interpolate import UnivariateSpline
 
 
-class UniSpline(R.Regressor):
+class UniSpline(PR.Regressor):
     def __init__(self, s=None, poly_deg=3, **kwargs):
         super().__init__(**kwargs)
         self.smooth_factor = s

@@ -1,10 +1,9 @@
 import numpy as np
-import sys
 import warnings
 from itertools import combinations
 from sklearn.preprocessing import StandardScaler
 from ClassifierAndRegressor import ModelEvaluation as ME
-from ClassifierAndRegressor import Regressor as R
+from ClassifierAndRegressor.ParametricModel import PRegressor as PR
 from ClassifierAndRegressor import Classifier as C
 from DimensionReductionApproaches.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
@@ -70,7 +69,7 @@ class ModelSelection:
                 model_comb.Fit(X_train=X_train[:, comb], Y_train=Y_train)
                 model_candidates.append((model_comb, comb))
 
-            if isinstance(model_candidates[0][0], R.Regressor):
+            if isinstance(model_candidates[0][0], PR.Regressor):
                 rsquareds = [_model.rsquared for _model, _ in model_candidates]
                 index = np.argmax(rsquareds)
             elif isinstance(model_candidates[0][0], C.Classifier):

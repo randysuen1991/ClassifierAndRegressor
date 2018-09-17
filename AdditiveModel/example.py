@@ -1,11 +1,11 @@
 import numpy as np
-# from . import AdditiveModel as AM
-# from .. import Regressor
 from ClassifierAndRegressor.AdditiveModel import AdditiveModel as AM
-from ClassifierAndRegressor import Regressor
+from ClassifierAndRegressor.NonParametricModel import NPRegressor as NPR
+
 
 def example1():
-    model = AM.AdditiveModel()
+    model = AM.AdditiveModel(smoother=NPR.UniSpline, smoother_factor=0.5)
+
 
 if __name__ == '__main__':
     example1()
