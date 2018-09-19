@@ -4,3 +4,7 @@ def example1():
 def example2():
     c = 5
     d = 6
+
+def example3():
+    e = 7
+
