@@ -12,9 +12,15 @@ class UniSpline(PR.Regressor):
         self.X_train_mean = None
 
     def fit(self, x_train, y_train, center=False):
-        self.X_train = x_train
-        self.Y_train = y_train
-        self.regressor = UnivariateSpline(x=self.X_train, y=self.Y_train, s=self.smooth_factor, k=self.poly_deg)
+        if len(y_train.shape) == 2:
+            y_train = y_train.ravel()
+        if len(x_train.shape) == 2:
+            x_train = x_train.ravel()
+        sorted_pair = zip(x_train, y_train)
+        sorted_pair = sorted(sorted_pair)
+        x_sorted = [x for x, _ in sorted_pair]
+        y_sorted = [y for _, y in sorted_pair]
+        self.regressor = UnivariateSpline(x=x_sorted, y=y_sorted, s=self.smooth_factor, k=self.poly_deg)
         if center:
             self.X_train_mean = np.mean(self.regressor(x_train))
             self.centered = True
