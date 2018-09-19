@@ -13,7 +13,7 @@ def example3():
     e = 1
 
 def example4():
-    g = 1
+    g = 5
     h = 2
     g = 3
     h = 4
