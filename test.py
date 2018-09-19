@@ -7,6 +7,9 @@ def example2():
 
 def example3():
     e = 7
+    y = 8
+    i = 10
+
 def example4():
     g = 1
     h = 2
