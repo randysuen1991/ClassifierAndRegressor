@@ -8,5 +8,5 @@ def example2():
 def example3():
     e = 7
 def example4():
-    g = 4
-    h = 5
+    g = 3
+    h = 4
