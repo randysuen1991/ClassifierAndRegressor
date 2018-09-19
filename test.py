@@ -17,3 +17,6 @@ def example4():
     h = 2
     g = 3
     h = 4
+
+def example5():
+    f = 7
