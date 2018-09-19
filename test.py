@@ -7,4 +7,5 @@ def example2():
 
 def example3():
     e = 7
-
+def example4():
+    g = 4
