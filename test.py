@@ -10,3 +10,5 @@ def example3():
 def example4():
     g = 1
     h = 2
+    g = 3
+    h = 4
