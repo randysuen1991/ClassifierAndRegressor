@@ -20,3 +20,6 @@ def example4():
 
 def example5():
     f = 7
+
+def example6():
+    u = 6
