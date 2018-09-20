@@ -25,39 +25,38 @@ class AdditiveModel:
     def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.1):
         alpha = np.mean(y_train)
         smoothers = [smoother(s=smooth_factor) for _ in range(x_train.shape[1])]
-        print(x_train.shape[1])
         first = True
         c = 0
         while True:
-            c += 1
-            print(c)
             for i in range(x_train.shape[1]):
+                # print(i)
+                # print('hhh')
                 y = y_train - alpha
-                print(i)
                 for j in range(x_train.shape[1]):
-                    print(j)
+                    # print(j)
                     if j == i:
                         continue
                     try:
-                        y -= smoothers[j].predict(X_test=x_train[:, j])
-                    except TypeError:
+                        y -= np.expand_dims(smoothers_old[j].predict(x_test=x_train[:, j]), axis=1)
+                    except UnboundLocalError:
                         pass
                 smoothers[i].fit(x_train=x_train[:, i], y_train=y, center=True)
-
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
+                    print(c)
                     return alpha, smoothers
-
 
             smoothers_old = cp.deepcopy(smoothers)
             first = False
+            c += 1
 
     @staticmethod
     def _check_convergence(smoothers, smoothers_old, x_train, threshold):
         for smoother, smoother_old in zip(smoothers, smoothers_old):
             results_old = smoother_old.predict(x_train)
             results = smoother.predict(x_train)
-            sum = np.sum(results-results_old)
-            if sum > threshold:
+            res_sum = np.sum(np.abs(results-results_old))
+            print(res_sum)
+            if res_sum > threshold:
                 return False
         return True
