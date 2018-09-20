@@ -21,11 +21,9 @@ class UniSpline(PR.Regressor):
         x_sorted = [x for x, _ in sorted_pair]
         y_sorted = [y for _, y in sorted_pair]
         while not all(np.diff(x_sorted) > 0):
-            # print(x_sorted[99], x_sorted[100], x_sorted[101], x_sorted[199], x_sorted[200], x_sorted[201])
             x_sorted = self._check_diff(x_sorted)
             if len(np.where(np.diff(x_sorted) <= 0)[0]) == 0:
                 break
-            # print(x_sorted[99], x_sorted[100], x_sorted[101], x_sorted[199], x_sorted[200], x_sorted[201])
         self.regressor = UnivariateSpline(x=x_sorted, y=y_sorted, s=self.smooth_factor, k=self.poly_deg)
         if center:
             self.X_train_mean = np.mean(self.regressor(x_train))
@@ -35,6 +33,8 @@ class UniSpline(PR.Regressor):
 
     def predict(self, x_test):
         if self.centered:
+            # print('prediction:', self.regressor(x_test).shape)
+            # print('mean:', self.X_train_mean)
             results = self.regressor(x_test) - self.X_train_mean
         else:
             results = self.regressor(x_test)
