@@ -16,8 +16,6 @@ class AdditiveModel:
     def predict(self, x_test):
         results = self.alpha
         for iterator, smoother in enumerate(self.smoothers):
-            # print(results)
-            # print(smoother.predict(x_test[:, iterator]))
             results += smoother.predict(x_test[:, iterator])
         return results
 
@@ -34,24 +32,24 @@ class AdditiveModel:
                 y = y_train - alpha
                 for j in range(x_train.shape[1]):
                     # print('residual computing...', j)
-                    if j == i:
-                        continue
-                    try:
-                        # print('y:', y[0, :])
+                    if j != i and (c > 0 or j < i):
                         y -= np.expand_dims(smoothers_old[j].predict(x_test=x_train[:, j]), axis=1)
-                        # print('pred:', np.expand_dims(smoothers_old[j].predict(x_test=x_train[:, j]), axis=1)[0, :])
-                        # print('y:', y[0, :])
-                    except UnboundLocalError:
-                        pass
+                        
+                # print('fitting!')
                 smoothers[i].fit(x_train=x_train[:, i], y_train=y, center=True)
+                # print('fitting over!')
+
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
-                    print(c)
+                    print('Convergence!')
                     return alpha, smoothers
 
             smoothers_old = cp.deepcopy(smoothers)
             first = False
             c += 1
+            if c == 5:
+                print(c)
+                return alpha, smoothers
 
     @staticmethod
     def _check_convergence(smoothers, smoothers_old, x_train, threshold):
