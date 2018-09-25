@@ -20,10 +20,13 @@ class AdditiveModel:
         return results
 
     @classmethod
-    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.1):
+    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.5):
+        y_train = y_train.ravel()
+        means = np.zeros(x_train.shape[1])
         alpha = np.mean(y_train)
-        smoothers = [smoother(s=smooth_factor) for _ in range(x_train.shape[1])]
+        smoothers = [smoother(smooth_factor=smooth_factor) for _ in range(x_train.shape[1])]
         first = True
+        smoothers_old = None
         c = 0
         while True:
             # print('iteration:', c)
@@ -31,14 +34,12 @@ class AdditiveModel:
                 # print('model:', i)
                 y = y_train - alpha
                 for j in range(x_train.shape[1]):
-                    # print('residual computing...', j)
                     if j != i and (c > 0 or j < i):
-                        y -= np.expand_dims(smoothers_old[j].predict(x_test=x_train[:, j]), axis=1)
-                        
-                # print('fitting!')
-                smoothers[i].fit(x_train=x_train[:, i], y_train=y, center=True)
-                # print('fitting over!')
+                        # print('residual computing...', j)
+                        y -= (smoothers[j].predict(x_test=x_train[:, j]) - means[j])
 
+                smoothers[i].fit(x_train=x_train[:, i], y_train=y)
+                means[i] = np.mean(smoothers[i].predict(x_train[:, i]))
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
                     print('Convergence!')
@@ -47,8 +48,8 @@ class AdditiveModel:
             smoothers_old = cp.deepcopy(smoothers)
             first = False
             c += 1
-            if c == 5:
-                print(c)
+            if c == 1000:
+                print('Not convergence, but attain upper bound of iteration times!')
                 return alpha, smoothers
 
     @staticmethod
