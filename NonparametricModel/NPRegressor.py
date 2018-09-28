@@ -28,7 +28,10 @@ class UniSpline(PR.Regressor):
         self.regressor = UnivariateSpline(x=x_sorted, y=y_sorted, s=self.smooth_factor, k=self.poly_deg)
 
     def predict(self, x_test):
-        return self.regressor(x_test)
+        try:
+            return self.regressor(x_test)
+        except TypeError:
+            return self.regressor(x_test[0])
 
     def regression_plot(self, x_test=None, y_test=None):
         if x_test is None or y_test is None:
