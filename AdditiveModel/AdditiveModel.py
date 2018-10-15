@@ -1,5 +1,6 @@
 import numpy as np
 import copy as cp
+from DataAnalysis import DataAnalysis as DA
 
 
 class AdditiveModel:
@@ -32,10 +33,13 @@ class AdditiveModel:
         first = True
         smoothers_old = None
         c = 0
+        # outliers removing
+        index = DA.DataAnalysis.outlierremoving(x_train=x_train, num_of_std=2)
+        index_unique = np.unique(index[0])
+        x_train = np.delete(x_train, index_unique, axis=0)
+        y_train = np.delete(y_train, index_unique, axis=0)
         while True:
-            # print('iteration:', c)
             for i in range(x_train.shape[1]):
-                # print('model:', i)
                 y = y_train - alpha
                 for j in range(x_train.shape[1]):
                     if j != i and (c > 0 or j < i):
@@ -45,8 +49,9 @@ class AdditiveModel:
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
                     # print('Convergence!')
-                    # continue
-                    for smoother in smoothers:
+                    for i, smoother in enumerate(smoothers):
+                        print('i:', i)
+                        smoother.scatter_plot()
                         smoother.regression_plot()
                     return alpha, smoothers
 

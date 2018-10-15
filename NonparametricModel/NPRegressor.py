@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from ClassifierAndRegressor.ParametricModel import PRegressor as PR
+from DataAnalysis import DataAnalysis as DA
 from scipy.interpolate import UnivariateSpline
 
 
@@ -12,7 +13,7 @@ class UniSpline(PR.Regressor):
         self.x_sorted = None
         self.y_sorted = None
 
-    def fit(self, x_train, y_train, sort=True):
+    def fit(self, x_train, y_train, sort=True, outlierhandle=False, **kwargs):
         if len(y_train.shape) == 2:
             y_train = y_train.ravel()
         if len(x_train.shape) == 2:
@@ -22,9 +23,15 @@ class UniSpline(PR.Regressor):
         else:
             x_sorted = x_train
             y_sorted = y_train
-
-        self.x_sorted = x_sorted
-        self.y_sorted = y_sorted
+        if outlierhandle:
+            num_of_std = kwargs.get('num_of_std', 2)
+            index = DA.DataAnalysis.outlierremoving(x_sorted, num_of_std)
+            index = np.unique(index[0])
+            self.x_sorted = np.delete(x_sorted, index, axis=0)
+            self.y_sorted = np.delete(y_sorted, index, axis=0)
+        else:
+            self.x_sorted = x_sorted
+            self.y_sorted = y_sorted
         self.regressor = UnivariateSpline(x=x_sorted, y=y_sorted, s=self.smooth_factor, k=self.poly_deg)
 
     def predict(self, x_test):
@@ -45,6 +52,14 @@ class UniSpline(PR.Regressor):
         plt.ylabel('response')
         plt.xlabel('explanatory')
         plt.title('Scatter Plot and Regression')
+        plt.show()
+
+    def scatter_plot(self):
+        scatter = plt.scatter(self.x_sorted, self.y_sorted)
+        plt.legend(handles=[scatter], labels=['scatter plot'], loc='best')
+        plt.ylabel('response')
+        plt.xlabel('explanatory')
+        plt.title('Scatter Plot')
         plt.show()
 
     @classmethod
