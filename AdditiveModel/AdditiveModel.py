@@ -13,9 +13,13 @@ class AdditiveModel:
         self.alpha, self.smoothers = self.backfitting(x_train=x_train, y_train=y_train, smoother=self.smoother,
                                                       smooth_factor=self.smoother_factor, threshold=threshold)
 
-    def predict(self, x_test):
+    def predict(self, x_test, show_all=False):
         results = self.alpha
         for iterator, smoother in enumerate(self.smoothers):
+            if show_all:
+                print('***')
+                print(smoother.predict(x_test[:, iterator]))
+                print('***')
             results += smoother.predict(x_test[:, iterator])
         return results
 
@@ -40,14 +44,17 @@ class AdditiveModel:
                 means[i] = np.mean(smoothers[i].predict(x_train[:, i]))
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
-                    print('Convergence!')
+                    # print('Convergence!')
+                    # continue
+                    for smoother in smoothers:
+                        smoother.regression_plot()
                     return alpha, smoothers
 
             smoothers_old = cp.deepcopy(smoothers)
             first = False
             c += 1
             if c == 2000:
-                print('Not convergence, but number of iteration times exceeds.')
+                # print('Not convergence, but number of iteration times exceeds.')
                 return alpha, smoothers
 
     @staticmethod
@@ -57,7 +64,7 @@ class AdditiveModel:
         for smoother, smoother_old in zip(smoothers, smoothers_old):
             results_old = smoother_old.predict(x_train[:, i])
             results = smoother.predict(x_train[:, i])
-            res += np.sum(results-results_old)
+            res += np.sum(np.abs(results-results_old))
             i += 1
         print('Residual:', np.abs(res))
         if np.abs(res) > threshold:
