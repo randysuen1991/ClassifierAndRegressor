@@ -34,7 +34,7 @@ class AdditiveModel:
         smoothers_old = None
         c = 0
         # outliers removing
-        index = DA.DataAnalysis.outlierremoving(x_train=x_train, num_of_std=2)
+        index = DA.DataAnalysis.outlierremoving(x_train=x_train, num_of_std=3)
         index_unique = np.unique(index[0])
         x_train = np.delete(x_train, index_unique, axis=0)
         y_train = np.delete(y_train, index_unique, axis=0)
@@ -59,7 +59,7 @@ class AdditiveModel:
             smoothers_old = cp.deepcopy(smoothers)
             first = False
             c += 1
-            if c == 2000:
+            if c == 20000:
                 # print('Not convergence, but number of iteration times exceeds.')
                 return alpha, smoothers
 
