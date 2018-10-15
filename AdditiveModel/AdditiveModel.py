@@ -25,7 +25,7 @@ class AdditiveModel:
         return results
 
     @classmethod
-    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.5):
+    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.01, plot=False):
         y_train = y_train.ravel()
         means = np.zeros(x_train.shape[1])
         alpha = np.mean(y_train)
@@ -49,10 +49,11 @@ class AdditiveModel:
             if not first:
                 if cls._check_convergence(smoothers, smoothers_old, x_train, threshold):
                     # print('Convergence!')
-                    for i, smoother in enumerate(smoothers):
-                        print('i:', i)
-                        smoother.scatter_plot()
-                        smoother.regression_plot()
+                    if plot:
+                        for i, smoother in enumerate(smoothers):
+                            print('i:', i)
+                            smoother.scatter_plot()
+                            smoother.regression_plot()
                     return alpha, smoothers
 
             smoothers_old = cp.deepcopy(smoothers)
