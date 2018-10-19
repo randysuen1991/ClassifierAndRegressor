@@ -19,7 +19,7 @@ class OrdinaryLeastSquaredRegressor(Regressor):
         self.regressor = LinearRegression()
 
 
-class PartialLeastSqaureRegressor(Regressor):
+class PartialLeastSquareRegressor(Regressor):
     def __init__(self, n_components):
         super().__init__()
         self.regressor = PLSRegression(n_components=n_components)
