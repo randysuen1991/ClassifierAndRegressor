@@ -16,16 +16,18 @@ class AdditiveModel:
 
     def predict(self, x_test, show_all=False):
         results = self.alpha
+        results_list = list()
         for iterator, smoother in enumerate(self.smoothers):
-            if show_all:
-                print('***')
-                print(smoother.predict(x_test[:, iterator]))
-                print('***')
-            results += smoother.predict(x_test[:, iterator])
+            result = smoother.predict(x_test[:, iterator])
+            results += result
+            results_list.append(round(result[0], 2))
+        if show_all:
+            print('results:')
+            print(results_list)
         return results
 
     @classmethod
-    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.01, plot=False):
+    def backfitting(cls, x_train, y_train, smoother, smooth_factor, threshold=0.01, plot=False, outlierremoving=False):
         y_train = y_train.ravel()
         means = np.zeros(x_train.shape[1])
         alpha = np.mean(y_train)
@@ -34,10 +36,11 @@ class AdditiveModel:
         smoothers_old = None
         c = 0
         # outliers removing
-        index = DA.DataAnalysis.outlierremoving(x_train=x_train, num_of_std=3)
-        index_unique = np.unique(index[0])
-        x_train = np.delete(x_train, index_unique, axis=0)
-        y_train = np.delete(y_train, index_unique, axis=0)
+        if outlierremoving:
+            index = DA.DataAnalysis.outlierremoving(x_train=x_train, num_of_std=3)
+            index_unique = np.unique(index[0])
+            x_train = np.delete(x_train, index_unique, axis=0)
+            y_train = np.delete(y_train, index_unique, axis=0)
         while True:
             for i in range(x_train.shape[1]):
                 y = y_train - alpha
