@@ -15,12 +15,12 @@ class Regressor:
         self.sst = None
         self.adjrsquared = None
         self.rsquared = None
-        self._X_train = None
-        self._Y_train = None
+        self._x_train = None
+        self._y_train = None
         self.n = None
-        # x_k refers to the number of the predictors of X_train
+        # x_k refers to the number of the predictors of x_train
         self.x_k = None
-        # y_k refers to the number of the responses of Y_train
+        # y_k refers to the number of the responses of y_train
         self.y_k = None
         self.p = None
         self.standardize = None
@@ -28,53 +28,53 @@ class Regressor:
         self.residual_visualizer = None
 
     @property
-    def X_train(self):
-        return self._X_train
+    def x_train(self):
+        return self._x_train
 
-    @X_train.setter
-    def X_train(self, X_train):
-        self._X_train = X_train
+    @x_train.setter
+    def x_train(self, x_train):
+        self._x_train = x_train
         try:
-            self.x_k = X_train.shape[1]
-            self.n = X_train.shape[0]
+            self.x_k = x_train.shape[1]
+            self.n = x_train.shape[0]
         except IndexError:
             self.x_k = 1
-            self.n = X_train.shape[0]
-            self._X_train = self._X_train.reshape(-1, 1)
+            self.n = x_train.shape[0]
+            self._x_train = self._x_train.reshape(-1, 1)
 
     @property
-    def Y_train(self):
-        return self._Y_train
+    def y_train(self):
+        return self._y_train
 
-    @Y_train.setter
-    def Y_train(self, Y_train):
-        self._Y_train = Y_train
+    @y_train.setter
+    def y_train(self, y_train):
+        self._y_train = y_train
         try:
-            self.y_k = Y_train.shape[1]
+            self.y_k = y_train.shape[1]
         except IndexError:
-            self.y_k = Y_train.shape[0]
-            self._Y_train = self._Y_train.reshape(-1, 1)
+            self.y_k = y_train.shape[0]
+            self._y_train = self._y_train.reshape(-1, 1)
 
-    def _Inference(self):
+    def _inference(self):
 
         try:
-            self.rsquared = self.regressor.score(self.X_train, self.Y_train)
+            self.rsquared = self.regressor.score(self.x_train, self.y_train)
         except AttributeError:
-            self.rsquared = self.regressor.regressor.score(self.X_train, self.Y_train)
+            self.rsquared = self.regressor.regressor.score(self.x_train, self.y_train)
 
         self.adjrsquared = ME.ModelEvaluation.AdjRsquared(self)
 
         # Store some info of the model.
-        self.sst = np.sum((self.Y_train-np.mean(self.Y_train, axis=0))**2, axis=0)
-        self.sse = np.sum((self.Predict(self.X_train) - self.Y_train) ** 2, axis=0)
-        self.sse_scaled = self.sse / float(self.X_train.shape[0] - self.X_train.shape[1])
+        self.sst = np.sum((self.y_train-np.mean(self.y_train, axis=0))**2, axis=0)
+        self.sse = np.sum((self.predict(self.x_train) - self.y_train) ** 2, axis=0)
+        self.sse_scaled = self.sse / float(self.x_train.shape[0] - self.x_train.shape[1])
 
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
         try:
-            centered_X_train = self.X_train - np.mean(self.X_train, axis=0)
+            centered_x_train = self.x_train - np.mean(self.x_train, axis=0)
             self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] *
-                                                    np.linalg.inv(np.dot(centered_X_train.T, centered_X_train))))
+                                                    np.linalg.inv(np.dot(centered_x_train.T, centered_x_train))))
                                 for i in range(len(self.sse_scaled))])
         except np.linalg.linalg.LinAlgError:
             return
@@ -87,63 +87,61 @@ class Regressor:
                 self.t = self.parameters['beta'] / self.se
             except KeyError:
                 return
-        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.X_train.shape[0] - self.X_train.shape[1]))
+        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.x_train.shape[0] - self.x_train.shape[1]))
 
-    def Fit(self, X_train, Y_train, standardize=False):
+    def fit(self, x_train, y_train, standardize=False):
         self.standardize = standardize
         if self.standardize:
-            self.standardizescaler.fit(X_train)
-            X_train = self.standardizescaler.transform(X_train)
-        plt.plot(X_train, Y_train)
-        plt.show()
-        self.X_train = X_train
-        self.Y_train = Y_train
-        self.regressor.fit(self.X_train, self.Y_train)
-        self._Inference()
-        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(X_train, Y_train)
+            self.standardizescaler.fit(x_train)
+            x_train = self.standardizescaler.transform(x_train)
+        self.x_train = x_train
+        self.y_train = y_train
+        self.regressor.fit(self.x_train, self.y_train)
+        self._inference()
+        return self.regressor.intercept_, self.regressor.coef_, self.p, self.regressor.score(x_train, y_train)
 
-    def Predict(self, X_test):
+    def predict(self, x_test):
         if self.standardize:
-            X_test = self.standardizescaler.transform(X_test)
+            x_test = self.standardizescaler.transform(x_test)
         try:
-            return self.regressor.predict(X_test)
+            return self.regressor.predict(x_test)
         except AttributeError:
-            return self.regressor.Predict(X_test=X_test)
+            return self.regressor.predict(x_test=x_test)
 
-    def Regression_Plot(self, X_test, Y_test):
-        scatter = plt.scatter(X_test, Y_test, color='b')
+    def regression_plot(self, x_test, y_test):
+        scatter = plt.scatter(x_test, y_test, color='b')
         try:
-            line = plt.plot(X_test, self.regressor.predict(X_test), color='r')
+            line = plt.plot(x_test, self.regressor.predict(x_test), color='r')
         except AttributeError:
-            line = plt.plot(X_test, self.regressor.Predict(X_test), color='r')
+            line = plt.plot(x_test, self.regressor.predict(x_test), color='r')
         plt.ylabel('response')
         plt.xlabel('explanatory')
         plt.legend(handles=[scatter, line[0], ],
                    labels=['Scatter Plot',
                            'Intercept:{}, Slope:{},\n R-square:{}'.format(self.regressor.intercept_,
                                                                           self.regressor.coef_,
-                                                                          self.regressor.score(X_test, Y_test))],
+                                                                          self.regressor.score(x_test, y_test))],
                    loc='best')
         plt.title('Scatter Plot and Regression')
 
-    def Residual_Plot(self, X_test=None, Y_test=None):
+    def residual_plot(self, x_test=None, y_test=None):
         if self.standardize:
-            X_test = self.standardizescaler.transform(X_test)
+            x_test = self.standardizescaler.transform(x_test)
         try:
             self.residual_visualizer = ResidualsPlot(self.regressor)
         except yellowbrick.exceptions.YellowbrickTypeError:
             self.residual_visualizer = ResidualsPlot(self.regressor.regressor)
 
-        self.residual_visualizer.fit(self.X_train, self.Y_train)
-        if X_test is not None and Y_test is not None:
-            self.residual_visualizer.score(X_test, Y_test)
+        self.residual_visualizer.fit(self.x_train, self.y_train)
+        if x_test is not None and y_test is not None:
+            self.residual_visualizer.score(x_test, y_test)
         self.residual_visualizer.poof()
 
-    def Get_Score(self, X_test, Y_test):
+    def Get_Score(self, x_test, y_test):
         if self.standardize:
-            X_test = self.standardizescaler.transform(X_test)
+            x_test = self.standardizescaler.transform(x_test)
         try:
-            return self.regressor.score(X_test, Y_test)
+            return self.regressor.score(x_test, y_test)
         except AttributeError:
-            return self.regressor.Get_Score(X_test, Y_test)
+            return self.regressor.Get_Score(x_test, y_test)
 
