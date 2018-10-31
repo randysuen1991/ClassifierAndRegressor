@@ -16,14 +16,9 @@ class AdditiveModel:
 
     def predict(self, x_test, show_all=False):
         results = self.alpha
-        results_list = list()
         for iterator, smoother in enumerate(self.smoothers):
             result = smoother.predict(x_test[:, iterator])
             results += result
-            results_list.append(round(result[0], 2))
-        if show_all:
-            print('results:')
-            print(results_list)
         return results
 
     @classmethod
