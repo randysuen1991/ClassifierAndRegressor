@@ -1,4 +1,4 @@
-from DimensionReductionApproaches import UtilFun as UF
+from DimensionReduction import UtilFun as UF
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -9,7 +9,7 @@ from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.tree import DecisionTreeClassifier as DTC
 from sklearn.linear_model import LogisticRegression
-import DimensionReductionApproaches as DRA
+import DimensionReduction as DRA
 from ClassifierAndRegressor.Core import ModelEvaluation as ME
 from ClassifierAndRegressor.Core import ModelSelection as MS
 from ClassifierAndRegressor.Core.Classifier import Classifier

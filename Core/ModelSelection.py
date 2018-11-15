@@ -7,7 +7,7 @@ from ClassifierAndRegressor.ParametricModel import PRegressor as PR
 from ClassifierAndRegressor.ParametricModel import PClassifier as PC
 from ClassifierAndRegressor.Core import Regressor as R
 from ClassifierAndRegressor.Core import Classifier as C
-from DimensionReductionApproaches.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from DimensionReduction.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 
 class VariableSelection:

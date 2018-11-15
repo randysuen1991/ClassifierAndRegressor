@@ -10,7 +10,7 @@ from sliced import SlicedInverseRegression
 from ClassifierAndRegressor.Core import ModelEvaluation as ME
 from ClassifierAndRegressor.Core import ModelSelection as MS
 from ClassifierAndRegressor.Core.Regressor import Regressor
-from DimensionReductionApproaches.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from DimensionReduction.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
 
 
 class OrdinaryLeastSquaredRegressor(Regressor):
@@ -40,10 +40,7 @@ class LassoRegressor(Regressor):
     def predict(self,  x_test):
         if self.standardize:
             x_test = self.standardizescaler.transform(x_test)
-        try:
-            return np.expand_dims(self.regressor.predict(X=x_test), 1)
-        except AttributeError:
-            return np.expand_dims(self.regressor.predict(x_test=x_test), 1)
+        return np.expand_dims(self.regressor.predict(X=x_test), 1)
 
 
 # Still need to check this class.
@@ -67,10 +64,7 @@ class PrincipalComponentRegressor(Regressor):
             x_test_transform = self.pca.transform(x_test)
         except ValueError:
             x_test_transform = x_test
-        try:
-            prediction = self.regressor.predict(x_test_transform)
-        except AttributeError:
-            prediction = self.regressor.predict(x_test_transform)
+        prediction = self.regressor.predict(x_test_transform)
         return prediction
 
     def residual_plot(self, x_test=None, y_test=None):
@@ -114,7 +108,7 @@ class RandForestRegressor(Regressor):
         self._inference()
         return self.rsquared
 
-    def Residual_Plot(self, x_test=None, y_test=None):
+    def residual_plot(self, x_test=None, y_test=None):
         if self.standardize:
             x_test = self.standardizescaler.transform(x_test)
         try:
@@ -132,10 +126,7 @@ class RandForestRegressor(Regressor):
     def predict(self, x_test):
         if self.standardize:
             x_test = self.standardizescaler.transform(x_test)
-        try:
-            return self.regressor.predict(x_test).reshape(-1, 1)
-        except AttributeError:
-            return self.regressor.predict(x_test=x_test).reshape(-1, 1)
+        return self.regressor.predict(x_test).reshape(-1, 1)
 
 
 class SlicedInverseRegressor(Regressor):
