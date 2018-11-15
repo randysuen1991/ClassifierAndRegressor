@@ -137,7 +137,7 @@ class Regressor:
             self.residual_visualizer.score(x_test, y_test)
         self.residual_visualizer.poof()
 
-    def Get_Score(self, x_test, y_test):
+    def get_score(self, x_test, y_test):
         if self.standardize:
             x_test = self.standardizescaler.transform(x_test)
         try:
