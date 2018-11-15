@@ -102,15 +102,15 @@ class LinearDiscriminantClassifier(Classifier):
         self.discriminant_function = discriminant_fun
         self.kwargs = kwargs
 
-    def Fit(self, X_train, Y_train):
-        self.parameters = self.discriminant_function(X_train=X_train, Y_train=Y_train, kwargs=self.kwargs)
-        X_train_proj = np.matmul(X_train, self.parameters)
-        self.classifier.Fit(X_train_proj, Y_train.ravel())
+    def fit(self, x_train, y_train):
+        self.parameters = self.discriminant_function(x_train=x_train, y_train=y_train, kwargs=self.kwargs)
+        x_train_proj = np.matmul(x_train, self.parameters)
+        self.classifier.fit(x_train_proj, y_train.ravel())
         return self.parameters
 
-    def Classify(self, X_test, Y_test=None):
-        X_test_proj = np.matmul(X_test, self.parameters)
-        return self.classifier.Classify(X_test_proj, Y_test)
+    def classify(self, x_test, y_test=None):
+        x_test_proj = np.matmul(x_test, self.parameters)
+        return self.classifier.classify(x_test_proj, y_test)
 
 
 class ForwardStepwiseClassifier(Classifier):
@@ -120,17 +120,17 @@ class ForwardStepwiseClassifier(Classifier):
         self.classifier_type = classifier
         self.kwargs = kwargs
 
-    def Fit(self, X_train, Y_train):
+    def fit(self, x_train, y_train):
 
-        ids = MS.ModelSelection.ForwardSelection(self.classifier_type, X_train, Y_train,
+        ids = MS.ModelSelection.ForwardSelection(self.classifier_type, x_train, y_train,
                                                  criteria=ME.ModelEvaluation.ValidationFBeta)
-        self.X_train = X_train[:, ids]
-        self.Y_train = Y_train
-        self._Inference(X_train[:, ids], Y_train)
+        self.x_train = x_train[:, ids]
+        self.y_train = y_train
+        self._inference(x_train[:, ids], y_train)
         try:
-            self.classifier.fit(self.X_train, self.Y_train.ravel())
+            self.classifier.fit(self.x_train, self.y_train.ravel())
         except AttributeError:
-            self.classifier.Fit(self.X_train, self.Y_train)
+            self.classifier.fit(self.x_train, self.y_train)
 
         return ids
 
@@ -142,16 +142,16 @@ class BackwardStepwiseClassifier(Classifier):
         self.classifier_type = classifier
         self.kwargs = kwargs
 
-    def Fit(self, X_train, Y_train):
+    def fit(self, x_train, y_train):
 
-        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, X_train, Y_train,
+        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, x_train, y_train,
                                                   criteria=ME.ModelEvaluation.ValidationAccuracy)
-        self.X_train = X_train[:, ids]
-        self.Y_train = Y_train
+        self.x_train = x_train[:, ids]
+        self.y_train = y_train
         try:
-            self.classifier.fit(self.X_train, self.Y_train)
+            self.classifier.fit(self.x_train, self.y_train)
         except AttributeError:
-            self.classifier.Fit(self.X_train, self.Y_train)
+            self.classifier.fit(self.x_train, self.y_train)
 
         return ids
 
@@ -162,13 +162,13 @@ class BestsubsetClassifier(Classifier):
         self.classifier = classifier()
         self.classifier_type = classifier
 
-    def Fit(self, X_train, Y_train):
-        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, X_train, Y_train,
+    def fit(self, x_train, y_train):
+        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, x_train, y_train,
                                                   criteria=ME.ModelEvaluation.ValidationAccuracy)
 
-        self.X_train = X_train[:, ids]
-        self.Y_train = Y_train
-        self.classifier.fit(self.X_train, self.Y_train)
+        self.x_train = x_train[:, ids]
+        self.y_train = y_train
+        self.classifier.fit(self.x_train, self.y_train)
 
 
 class TwoStepClassifier(Classifier):
@@ -178,42 +178,43 @@ class TwoStepClassifier(Classifier):
         self.second_step_function = second_step_function
         self.classify_function = classify_function
         self.parameters = dict()
+        self.input_shape = None
 
-    def Fit(self, X_train, Y_train,**kwargs):
+    def fit(self, x_train, y_train, **kwargs):
 
-        self.input_shape = (X_train.shape[1],X_train.shape[2],X_train.shape[3])
-        dimension = self._Search_Dimensionality(X_train=X_train,
-                                                Y_train=Y_train)
-        linear_subspace = self.first_step_function(X_train=X_train,
-                                                   Y_train=Y_train,
+        self.input_shape = (x_train.shape[1],x_train.shape[2],x_train.shape[3])
+        dimension = self._Search_Dimensionality(x_train=x_train,
+                                                y_train=y_train)
+        linear_subspace = self.first_step_function(x_train=x_train,
+                                                   y_train=y_train,
                                                    p_tilde=dimension,
                                                    q_tilde=dimension)
         
         self.parameters['first_step']['row'] = linear_subspace[0]
         self.parameters['first_step']['column'] = linear_subspace[1]
         
-        X_train_proj = DRA.MultilinearReduction.TensorProject(X_train, self.parameters['first_step']['row'],
+        x_train_proj = DRA.MultilinearReduction.TensorProject(x_train, self.parameters['first_step']['row'],
                                                               self.parameters['first_step']['column'])
-        X_train_proj_vec = UF.imgs2vectors(X_train_proj)
+        x_train_proj_vec = UF.imgs2vectors(x_train_proj)
         
-        self.parameters['second_step'] = self.second_step_function(X_train=X_train,Y_train=Y_train)
+        self.parameters['second_step'] = self.second_step_function(x_train=x_train,y_train=y_train)
         
-        self.transformed_X_train = np.matmul(X_train_proj_vec,
+        self.transformed_x_train = np.matmul(x_train_proj_vec,
                                              self.parameters['second_step'])
-        self.Y_train = Y_train
+        self.y_train = y_train
         return self.parameters
     
-    def _Search_Dimensionality(self, X_train, Y_train, p_tilde, q_tilde, dimension=50):
+    def _Search_Dimensionality(self, x_train, y_train, p_tilde, q_tilde, dimension=50):
 
         ratios = []
         for iter in range(dimension):
-            linear_subspace = self.first_step_function(X_train=X_train, input_shape=self.input_shape,
+            linear_subspace = self.first_step_function(x_train=x_train, input_shape=self.input_shape,
                                                        p_tilde=iter+1, q_tilde=iter+1)
-            X_train_proj = np.matmul(np.matmul(linear_subspace[0], X_train), linear_subspace[1])
-            X_train_proj_vec = UF.imgs2vectors(X_train_proj)
-            linear_subspace = self.second_step_function(X_train_proj, Y_train)
-            X_train_proj_vec_proj = np.matmul(X_train_proj_vec, linear_subspace)
-            ratio = self.Compute_Ratio(X_train_proj_vec_proj, Y_train)
+            x_train_proj = np.matmul(np.matmul(linear_subspace[0], x_train), linear_subspace[1])
+            x_train_proj_vec = UF.imgs2vectors(x_train_proj)
+            linear_subspace = self.second_step_function(x_train_proj, y_train)
+            x_train_proj_vec_proj = np.matmul(x_train_proj_vec, linear_subspace)
+            ratio = self.Compute_Ratio(x_train_proj_vec_proj, y_train)
             ratios.append(ratio)
         
         ratios = np.round(ratios,6)
@@ -221,23 +222,23 @@ class TwoStepClassifier(Classifier):
         
         return index + 1
 
-    def Classify(self, X_test, Y_test, **kwargs):
+    def classify(self, x_test, y_test, **kwargs):
         k = kwargs.get('k', 1)
         # Use K-nearest neighbor to classify the testing data
         neighbor = KNeighborsClassifier(n_neighbors=k)
-        neighbor.fit(self.transformed_X_train, self.Y_train.ravel())
+        neighbor.fit(self.transformed_x_train, self.y_train.ravel())
         
-        X_test_proj = DRA.MultilinearReduction.TensorProject(X_test, self.parameters['first_step']['row'],
+        x_test_proj = DRA.MultilinearReduction.TensorProject(x_test, self.parameters['first_step']['row'],
                                                              self.parameters['first_step']['column'])
-        X_test_proj_vec = UF.imgs2vectors(X_test_proj)
-        X_test_proj_vec_proj = np.matmul(X_test_proj_vec, self.parameters['second_step'])
-        results = neighbor.predict(X_test_proj_vec_proj)
-        correct_results = np.where(results == Y_test.ravel())[0]
-        return len(correct_results) / len(Y_test), correct_results
+        x_test_proj_vec = UF.imgs2vectors(x_test_proj)
+        x_test_proj_vec_proj = np.matmul(x_test_proj_vec, self.parameters['second_step'])
+        results = neighbor.predict(x_test_proj_vec_proj)
+        correct_results = np.where(results == y_test.ravel())[0]
+        return len(correct_results) / len(y_test), correct_results
 
-    def Compute_Ratio(self, X_train, Y_train):
-        Total_centered = DRA.TotalCentered(X_train)
-        Between_centered = DRA.BetweenGroupMeanCentered(X_train, Y_train)
+    def Compute_Ratio(self, x_train, y_train):
+        Total_centered = DRA.TotalCentered(x_train)
+        Between_centered = DRA.BetweenGroupMeanCentered(x_train, y_train)
         _, S, _ = np.linalg.svd(Total_centered, full_matrices=False)
         denominator = np.sum(S)
         _, S, _ = np.linalg.svd(Between_centered, full_matrices=False)
