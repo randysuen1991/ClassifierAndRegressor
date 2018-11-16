@@ -63,12 +63,12 @@ class Classifier:
             correct_results = np.where(results == y_test.ravel())[0]
             return len(correct_results) / len(y_test), results, correct_results
 
-    def Evaluate(self, Y_pred):
+    def evaluate(self, y_pred):
         if len(np.unique(self.y_train)) == 2:
             positive = np.unique(self.y_train)[0]
             negative = np.unique(self.y_train)[1]
             y_train = self.y_train.ravel()
-            valid_results = np.array(Y_pred)
+            valid_results = np.array(y_pred)
             pred_positive = np.where(valid_results == positive)[0]
             pred_negative = np.where(valid_results == negative)[0]
             label_positive = np.where(y_train == positive)[0]
@@ -91,16 +91,15 @@ class Classifier:
 
     # This function does 1/3-folded cross-validation.
     def _inference(self, x_train, y_train):
+        if len(y_train.shape) == 1:
+            y_train = np.expand_dims(y_train, 1)
         n = x_train.shape[0]
         perm_x_train = np.random.permutation(x_train)
         valid_num = int(n / 3)
-        X_valid = perm_x_train[0:valid_num, :]
+        x_valid = perm_x_train[0:valid_num, :]
         x_train = perm_x_train[valid_num:, :]
-        Y_valid = y_train[0:valid_num, :]
+        y_valid = y_train[0:valid_num, :]
         y_train = y_train[valid_num:, :]
-        try:
-            self.classifier.fit(x_train, y_train)
-        except AttributeError:
-            self.classifier.fit(x_train, y_train.ravel())
-        self.valid_accuracy, valid_results, _ = self.classify(X_valid, Y_valid.ravel())
-        self.valid_recall, self.valid_precision = self.Evaluate(valid_results)
+        self.classifier.fit(x_train, y_train.ravel())
+        self.valid_accuracy, valid_results, _ = self.classify(x_valid, y_valid.ravel())
+        self.valid_recall, self.valid_precision = self.evaluate(valid_results)

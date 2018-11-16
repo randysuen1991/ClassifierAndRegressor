@@ -121,17 +121,12 @@ class ForwardStepwiseClassifier(Classifier):
         self.kwargs = kwargs
 
     def fit(self, x_train, y_train):
-
-        ids = MS.ModelSelection.ForwardSelection(self.classifier_type, x_train, y_train,
-                                                 criteria=ME.ModelEvaluation.ValidationFBeta)
+        ids = MS.ModelSelection.forward_selection(self.classifier_type, x_train, y_train,
+                                                  criteria=ME.ModelEvaluation.ValidationFBeta)
         self.x_train = x_train[:, ids]
         self.y_train = y_train
         self._inference(x_train[:, ids], y_train)
-        try:
-            self.classifier.fit(self.x_train, self.y_train.ravel())
-        except AttributeError:
-            self.classifier.fit(self.x_train, self.y_train)
-
+        self.classifier.fit(self.x_train, self.y_train.ravel())
         return ids
 
 
@@ -144,8 +139,8 @@ class BackwardStepwiseClassifier(Classifier):
 
     def fit(self, x_train, y_train):
 
-        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, x_train, y_train,
-                                                  criteria=ME.ModelEvaluation.ValidationAccuracy)
+        ids = MS.ModelSelection.backward_selection(self.classifier_type, x_train, y_train,
+                                                   criteria=ME.ModelEvaluation.ValidationAccuracy)
         self.x_train = x_train[:, ids]
         self.y_train = y_train
         try:
@@ -163,8 +158,8 @@ class BestsubsetClassifier(Classifier):
         self.classifier_type = classifier
 
     def fit(self, x_train, y_train):
-        ids = MS.ModelSelection.BackwardSelection(self.classifier_type, x_train, y_train,
-                                                  criteria=ME.ModelEvaluation.ValidationAccuracy)
+        ids = MS.ModelSelection.backward_selection(self.classifier_type, x_train, y_train,
+                                                   criteria=ME.ModelEvaluation.ValidationAccuracy)
 
         self.x_train = x_train[:, ids]
         self.y_train = y_train
@@ -182,7 +177,7 @@ class TwoStepClassifier(Classifier):
 
     def fit(self, x_train, y_train, **kwargs):
 
-        self.input_shape = (x_train.shape[1],x_train.shape[2],x_train.shape[3])
+        self.input_shape = (x_train.shape[1], x_train.shape[2], x_train.shape[3])
         dimension = self._Search_Dimensionality(x_train=x_train,
                                                 y_train=y_train)
         linear_subspace = self.first_step_function(x_train=x_train,
@@ -204,7 +199,7 @@ class TwoStepClassifier(Classifier):
         self.y_train = y_train
         return self.parameters
     
-    def _Search_Dimensionality(self, x_train, y_train, p_tilde, q_tilde, dimension=50):
+    def _search_dimensionality(self, x_train, y_train, p_tilde, q_tilde, dimension=50):
 
         ratios = []
         for iter in range(dimension):

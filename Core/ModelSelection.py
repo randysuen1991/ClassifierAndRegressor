@@ -7,20 +7,20 @@ from ClassifierAndRegressor.ParametricModel import PRegressor as PR
 from ClassifierAndRegressor.ParametricModel import PClassifier as PC
 from ClassifierAndRegressor.Core import Regressor as R
 from ClassifierAndRegressor.Core import Classifier as C
-from DimensionReduction.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from DimensionReduction.DimensionReductionApproaches import centering_decorator, standardizing_decorator
 
 
 class VariableSelection:
     # Till now, y_train should be a N*1 matrix.
     @staticmethod
-    @CenteringDecorator('x_train', 'y_train')
-    def corrselection(x_train, y_train, both_sides, num_each_side, abs=False, **kwargs):
+    @centering_decorator('x_train', 'y_train')
+    def corr_selection(x_train, y_train, both_sides, num_each_side, abs=False, **kwargs):
         if y_train.shape[1] > 1:
             warnings.warn('The dimension of the Y variable should be 1 now.')
         covariance = np.matmul(x_train.T, y_train)/x_train.shape[0]
-        X_std = np.expand_dims(np.std(x_train, axis=0), axis=1)
-        Y_std = np.std(y_train)
-        corr = covariance/(X_std*Y_std)
+        x_std = np.expand_dims(np.std(x_train, axis=0), axis=1)
+        y_std = np.std(y_train)
+        corr = covariance / (x_std*y_std)
         
         if abs is True:
             if num_each_side == 'full':
@@ -58,7 +58,7 @@ class VariableSelection:
 class ModelSelection:
 
     @staticmethod
-    def bestsubsetselection(model, x_train, y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
+    def bestsubset_selection(model, x_train, y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         warnings.warn('Please notice that when the number of predictors are too large, the'
                       'best subset selection would be quite time-consuming.')
         p = kwargs.get('p', x_train.shape[1])
@@ -103,7 +103,7 @@ class ModelSelection:
 
     # This function would return a list of indices indicating which predictors we should select.
     @staticmethod
-    def forwardselection(model, x_train, y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
+    def forward_selection(model, x_train, y_train, criteria=ME.ModelEvaluation.MallowCp, **kwargs):
         p = kwargs.get('p', x_train.shape[1])
         if p > x_train.shape[0]:
             p = x_train.shape[0]
@@ -165,7 +165,7 @@ class ModelSelection:
         return predictors_order[:index+1]
 
     @staticmethod
-    def backwardselection(model, x_train, y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
+    def backward_selection(model, x_train, y_train, criteria=ME.ModelEvaluation.AIC, **kwargs):
         p = kwargs.get('p', x_train.shape[1])
         x_train = x_train[:, :p]
         if x_train.shape[1] > x_train.shape[0]:

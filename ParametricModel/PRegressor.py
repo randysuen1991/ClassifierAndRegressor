@@ -10,7 +10,7 @@ from sliced import SlicedInverseRegression
 from ClassifierAndRegressor.Core import ModelEvaluation as ME
 from ClassifierAndRegressor.Core import ModelSelection as MS
 from ClassifierAndRegressor.Core.Regressor import Regressor
-from DimensionReduction.DimensionReductionApproaches import CenteringDecorator, StandardizingDecorator
+from DimensionReduction.DimensionReductionApproaches import centering_decorator, standardizing_decorator
 
 
 class OrdinaryLeastSquaredRegressor(Regressor):
@@ -227,8 +227,8 @@ class ForwardStagewiseRegressor(Regressor):
         self.X_mean = None
         self.Y_mean = None
 
-    @CenteringDecorator('x_train', 'y_train')
-    @StandardizingDecorator('x_train', 'y_train')
+    @centering_decorator('x_train', 'y_train')
+    @standardizing_decorator('x_train', 'y_train')
     def fit(self, x_train, y_train, **kwargs):
         self.x_train = x_train
         self.y_train = y_train
