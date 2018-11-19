@@ -11,6 +11,7 @@ from ClassifierAndRegressor.Core import ModelEvaluation as ME
 from ClassifierAndRegressor.Core import ModelSelection as MS
 from ClassifierAndRegressor.Core.Regressor import Regressor
 from DimensionReduction.DimensionReductionApproaches import centering_decorator, standardizing_decorator
+from pyfinance.ols import PandasRollingOLS, RollingOLS
 
 
 class OrdinaryLeastSquaredRegressor(Regressor):
@@ -221,7 +222,6 @@ class BestsubsetRegressor(Regressor):
 
 # The response should be univariate.
 class ForwardStagewiseRegressor(Regressor):
-
     def __init__(self):
         super().__init__()
         self.X_mean = None
@@ -265,3 +265,44 @@ class ForwardStagewiseRegressor(Regressor):
     def predict(self, x_test):
         x_test = x_test - self.X_mean
         return np.matmul(x_test, self.parameters['beta'])
+
+
+# I add "predict" method to the RollingOLS class.
+class ExtendedRollingOLS(Regressor):
+    def __init__(self, window_size=None, has_const=False, use_const=True):
+        super().__init__()
+        self.window_size = window_size
+        self.has_const = has_const
+        self.use_const = use_const
+
+    def fit(self, x_train, y_train, standardize=False):
+        self.x_train = x_train
+        self.y_train = y_train
+        self.standardize = standardize
+        if self.standardize:
+            self.standardizescaler.fit(x_train)
+            x_train = self.standardizescaler.transform(x_train)
+
+        self.regressor = RollingOLS(y=y_train, x=x_train, window=self.window_size, has_const=self.has_const,
+                                    use_const=self.use_const)
+
+    def predict(self, x_test):
+        parameters = np.hstack((self.regressor.alpha.values.reshape(-1,1), self.regressor.beta.values))
+        extended_x_test = np.hstack((np.ones(shape=(x_test.shape[0], 1)), x_test))
+        return np.matmul(extended_x_test, parameters)
+
+
+class ExtendedPandasRollingOLS(ExtendedRollingOLS):
+    def __init__(self, window_size=None, has_const=False, use_const=True):
+        super().__init__(window_size, has_const, use_const)
+
+    def fit(self, x_train, y_train, standardize=False):
+        self.x_train = x_train
+        self.y_train = y_train
+        self.standardize = standardize
+        if self.standardize:
+            self.standardizescaler.fit(x_train)
+            x_train = self.standardizescaler.transform(x_train)
+
+        self.regressor = PandasRollingOLS(y=y_train, x=x_train, window=self.window_size, has_const=self.has_const,
+                                          use_const=self.use_const)
