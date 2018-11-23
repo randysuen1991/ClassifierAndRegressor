@@ -287,9 +287,10 @@ class ExtendedRollingOLS(Regressor):
                                     use_const=self.use_const)
 
     def predict(self, x_test):
-        parameters = np.hstack((self.regressor.alpha.values.reshape(-1,1), self.regressor.beta.values))
+        parameters = np.hstack((self.regressor.alpha[0:-1].values.reshape(-1, 1), self.regressor.beta[0:-1].values))
         extended_x_test = np.hstack((np.ones(shape=(x_test.shape[0], 1)), x_test))
-        return np.matmul(extended_x_test, parameters)
+        multiply = np.multiply(extended_x_test, parameters)
+        return multiply[:, 0] + multiply[:, 1]
 
 
 class ExtendedPandasRollingOLS(ExtendedRollingOLS):
