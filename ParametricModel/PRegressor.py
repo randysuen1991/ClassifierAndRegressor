@@ -277,12 +277,13 @@ class ExtendedRollingOLS(Regressor):
 
     def fit(self, x_train, y_train, standardize=False):
         self.x_train = x_train
-        self.y_train = y_train
+
         self.standardize = standardize
         if self.standardize:
             self.standardizescaler.fit(x_train)
             x_train = self.standardizescaler.transform(x_train)
-
+        self.x_train = x_train
+        self.y_train = y_train
         self.regressor = RollingOLS(y=y_train, x=x_train, window=self.window_size, has_const=self.has_const,
                                     use_const=self.use_const)
 

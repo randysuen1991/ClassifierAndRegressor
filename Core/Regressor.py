@@ -72,14 +72,17 @@ class Regressor:
         if type(self.sse_scaled) == np.float64:
             self.sse_scaled = [self.sse_scaled]
         try:
-            centered_x_train = self.x_train - np.mean(self.x_train, axis=0)
-            self.se = np.array([np.sqrt(np.diagonal(self.sse_scaled[i] *
-                                                    np.linalg.inv(np.dot(centered_x_train.T, centered_x_train))))
-                                for i in range(len(self.sse_scaled))])
+            if not self.standardize:
+                x_train = self.x_train - np.mean(self.x_train, axis=0)
+            else:
+                x_train = self.x_train
+            var_beta = self.sse_scaled * (np.linalg.inv(np.dot(x_train.T, x_train)).diagonal())
+            self.se = np.sqrt(var_beta)
         except np.linalg.linalg.LinAlgError:
             return
         except TypeError:
             return
+
         try:
             self.t = self.regressor.coef_ / self.se
         except AttributeError:
@@ -87,7 +90,7 @@ class Regressor:
                 self.t = self.parameters['beta'] / self.se
             except KeyError:
                 return
-        self.p = 2 * (1 - stats.t.cdf(np.abs(self.t), self.x_train.shape[0] - self.x_train.shape[1]))
+        self.p = [2 * (1-stats.t.cdf(np.abs(i), (len(x_train)-1))) for i in self.t]
 
     def fit(self, x_train, y_train, standardize=False):
         self.standardize = standardize
