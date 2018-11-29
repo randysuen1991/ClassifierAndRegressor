@@ -1,5 +1,6 @@
 from scipy import stats
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from yellowbrick.regressor import ResidualsPlot
@@ -84,7 +85,7 @@ class Regressor:
             return
 
         try:
-            self.t = self.regressor.coef_ / self.se
+            self.t = self.regressor.coef_ / np.array(self.se)
         except AttributeError:
             try:
                 self.t = self.parameters['beta'] / self.se
@@ -93,6 +94,9 @@ class Regressor:
         self.p = [2 * (1-stats.t.cdf(np.abs(i), (len(x_train)-1))) for i in self.t]
 
     def fit(self, x_train, y_train, standardize=False):
+        x_train = x_train
+        y_train = y_train
+
         self.standardize = standardize
         if self.standardize:
             self.standardizescaler.fit(x_train)
