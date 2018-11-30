@@ -9,7 +9,7 @@ def example1():
     Y_train = 1 + 2 * X_train + noise
     a = 5
     b = 4
-
+    g = 6
 
 
 
