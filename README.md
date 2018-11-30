@@ -21,4 +21,8 @@ There are several subclasses of Regressor class. Most of them are based on sklea
 
 ## HaHa
 
+<<<<<<< HEAD
 ## hahahaha
+=======
+## hehehehe
+>>>>>>> e49618a83b633b641496132ae1d8330b1ded135f
